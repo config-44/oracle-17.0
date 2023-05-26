@@ -1,0 +1,11 @@
+.DS_Store
+oracle-swift/.DS_Store
+oracle-swift/.build
+oracle-swift/Packages
+oracle-swift/*.xcodeproj
+oracle-swift/xcuserdata/
+oracle-swift/DerivedData/
+oracle-swift/.swiftpm
+oracle-swift/.netrc
+oracle-swift/.env.*
+oracle-swift/!.env.development
