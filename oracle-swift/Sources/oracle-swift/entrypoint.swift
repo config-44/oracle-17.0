@@ -12,14 +12,6 @@ import Dispatch
 import Logging
 
 let ADNL_PUB_KEY = "BYSVpL7aPk0kU5CtlsIae/8mf2B/NrBi7DKmepcjX6Q="
-var p: ADNLKeys!
-var par: ADNLAESParams!
-var addr: ADNLAddress!
-var cipher: AESADNL!
-var decipher: AESADNL!
-
-var handshake: Data!
-
 
 @main
 enum Entrypoint {
@@ -28,14 +20,12 @@ enum Entrypoint {
         try LoggingSystem.bootstrap(from: &env)
         let evetnLoop: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let app: Application = .init(env, Application.EventLoopGroupProvider.shared(evetnLoop))
-
+        
         defer { app.shutdown() }
         try await configure(app)
-        Thread { do { try Client().run() } catch {} }.start()
+        TCPConnectionCenter.initialize(app: app, serverIp: SERVER_IP, serverPort: SERVER_PORT, serverSecret: SECRET_KEY, peers: [])
+        try TCPConnectionCenter.shared.run()
         try await app.runFromAsyncMainEntrypoint()
-        
-//        try Client().run()
-//        try run()
     }
 }
 
