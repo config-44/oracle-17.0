@@ -8,6 +8,8 @@
 import Foundation
 import Vapor
 
+var logger: Logger!
+
 func configure(_ app: Application) async throws {
     let env = try Environment.detect()
     
@@ -21,4 +23,5 @@ func configure(_ app: Application) async throws {
     #else
     app.logger.logLevel = .debug
     #endif
+    logger = app.logger
 }

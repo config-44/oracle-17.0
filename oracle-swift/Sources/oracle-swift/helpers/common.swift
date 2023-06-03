@@ -23,11 +23,17 @@ public enum ErrorPrint {
     case critical
 }
 
-public func errorPrint(_ app: Application, _ error: Error, _ mode: ErrorPrint = .warning) {
+public func errorPrint(_ error: Error, _ mode: ErrorPrint = .warning, _ line: Int = #line, _ function: String = #function) {
     switch mode {
     case .warning:
-        app.logger.warning("\(makeError(OError(String(describing: error))).localizedDescription)")
+        logger.warning("\(makeError(OError(String(describing: error)), function, line).localizedDescription)")
     case .critical:
-        app.logger.critical("\(makeError(OError(String(describing: error))).localizedDescription)")
+        logger.critical("\(makeError(OError(String(describing: error)), function, line).localizedDescription)")
     }
+}
+
+let ep = errorPrint
+
+public func errorPrint(_ str: String) {
+    logger.info("\(str)")
 }

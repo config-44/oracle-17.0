@@ -11,14 +11,20 @@ import Vapor
 
 extension TCPController {
     
-    static func ping(client: ClientServer) {
-        let TL_GETTIME = "7af98bb435263e6c95d6fecb497dfd0aa5f031e7d412986b5ce720496db512052e8f2d100cdf068c7904345aad16000000000000"
-        let data = try! client.cipher.encryptor.adnlSerializeMessage(data: TL_GETTIME.dataFromHex!)
+    static func ping(client: ClientServer) throws {
+        var data = TCPRouter.makeRequestWithRoute(.ping, data: Data())
+        data = try client.cipher.encryptor.adnlSerializeMessage(data: data)
         let buffer = client.channel.allocator.buffer(bytes: data)
+        pe("ping")
         client.channel.writeAndFlush(NIOAny(buffer), promise: nil)
     }
     
-    static func pong(context: Channel) {
-        
+    static func pong(client: ClientServer) throws {
+        var data = TCPRouter.makeRequestWithRoute(.pong, data: Data())
+        data = try client.cipher.encryptor.adnlSerializeMessage(data: data)
+        let buffer = client.channel.allocator.buffer(bytes: data)
+        pe("pong")
+        client.receivedPong = true
+        client.channel.writeAndFlush(NIOAny(buffer), promise: nil)
     }
 }

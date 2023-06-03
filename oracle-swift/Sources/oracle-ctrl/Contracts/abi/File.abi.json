@@ -1,0 +1,14 @@
+[
+ {"name":"_master_key","type":"uint256"},
+ {"name":"_proposal_timeout","type":"uint32"},
+ {"name":"_total_stake","type":"varuint16"},
+ {"name":"_min_stake","type":"varuint16"},
+ {"name":"_max_stake","type":"varuint16"},
+ {"name":"_min_voting_reward","type":"varuint16"},
+ {"name":"_total_rewards","type":"varuint16"},
+ {"name":"_proposals_count","type":"uint8"},
+ {"name":"_proposal_list","type":"map(uint64,cell)"},
+ {"name":"_active_proposers","type":"optional(cell)"},
+ {"name":"_current_list","type":"map(uint7,cell)"},
+ {"name":"_req_code","type":"cell"}
+]

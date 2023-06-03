@@ -18,14 +18,25 @@ struct TCPRemotePeer {
 
 class ClientServer {
     private let lock: NSLock = .init()
-    private var _app: Application
     private var _cipher: ADNLCipher!
     private var _channel: Channel!
     private var _type: ConnectType
     private var _connected: Bool = false
-    private var pingDelaySec: UInt32 = 5
+    private var _pingDelaySec: UInt32
     private var _receivedPong: Bool = false
     private var lastPongTime: UInt = Date().toSeconds()
+    var pingDelaySec: UInt32 {
+        get {
+            lock.lock()
+            defer { lock.unlock() }
+            return _pingDelaySec
+        }
+        set {
+            lock.lock()
+            defer { lock.unlock() }
+            _pingDelaySec = newValue
+        }
+    }
     var receivedPong: Bool {
         get {
             lock.lock()
@@ -37,18 +48,6 @@ class ClientServer {
             defer { lock.unlock() }
             if newValue { lastPongTime = Date().toSeconds() }
             _receivedPong = newValue
-        }
-    }
-    var app: Application {
-        get {
-            lock.lock()
-            defer { lock.unlock() }
-            return _app
-        }
-        set {
-            lock.lock()
-            defer { lock.unlock() }
-            _app = newValue
         }
     }
     var cipher: ADNLCipher {
@@ -100,12 +99,17 @@ class ClientServer {
         }
     }
     
-    init(app: Application, signer: ADNLCipher? = nil, channel: Channel? = nil, type: ClientServer.ConnectType, connected: Bool = false) {
-        self._app = app
+    init(signer: ADNLCipher? = nil,
+         channel: Channel? = nil,
+         type: ClientServer.ConnectType,
+         connected: Bool = false,
+         pingDelaySec: UInt32 = 5
+    ) {
         self._cipher = signer
         self._channel = channel
         self._type = type
         self._connected = connected
+        self._pingDelaySec = pingDelaySec
         pingWatcher()
     }
     
@@ -116,11 +120,12 @@ class ClientServer {
                 sleep(self.pingDelaySec)
                 if self.connected {
                     let now: UInt = Date().toSeconds()
-                    if (now - self.lastPongTime) >= self.pingDelaySec {
+                    let diff: UInt = now - self.lastPongTime
+                    if diff >= self.pingDelaySec {
                         self._receivedPong = false
                     }
-                    if (now - self.lastPongTime) > (self.pingDelaySec * 3) {
-                        self.app.logger.warning("Ping error. Close Channel")
+                    if diff > (self.pingDelaySec * 3) {
+                        logger.warning("Ping error. Close Channel")
                         let promise: EventLoopPromise<Void> = self.channel.eventLoop.makePromise()
                         self.channel.close(promise: promise)
                         promise.futureResult.whenComplete { result in
@@ -143,7 +148,6 @@ extension ClientServer {
 class TCPConnectionCenter {
     private var lock: NSLock = .init()
     private static var lock: NSLock = .init()
-    private var _app: Application
     private var _clients: [String: ClientServer] = [:]
     private var _server: Server
     private static var _shared: TCPConnectionCenter!
@@ -185,41 +189,34 @@ class TCPConnectionCenter {
             _shared = newValue
         }
     }
-    var app: Application {
-        get {
-            lock.lock()
-            defer { lock.unlock() }
-            return _app
-        }
-        set {
-            lock.lock()
-            defer { lock.unlock() }
-            _app = newValue
-        }
-    }
     
-    private init(app: Application, serverIp: String, serverPort: Int, serverSecret: String, peers: [TCPRemotePeer]) {
-        self._app = app
+    private init(serverIp: String, serverPort: Int, serverSecret: String, peers: [TCPRemotePeer]) {
         self._clients = [:]
-        self._server = Server(app: app, ipAddress: serverIp, port: serverPort, secretKey: serverSecret)
+        self._server = Server(ipAddress: serverIp, port: serverPort, secretKey: serverSecret)
     }
     
-    static func initialize(app: Application, serverIp: String, serverPort: Int, serverSecret: String, peers: [TCPRemotePeer]) {
-        Self.shared = .init(app: app, serverIp: serverIp, serverPort: serverPort, serverSecret: serverSecret, peers: peers)
+    static func initialize(serverIp: String, serverPort: Int, serverSecret: String, peers: [TCPRemotePeer]) {
+        Self.shared = .init(serverIp: serverIp, serverPort: serverPort, serverSecret: serverSecret, peers: peers)
     }
     
     func run() throws {
         Thread { [weak self] in
             guard let self = self else { return }
-//            try? Client(app: self.app, ipAddress: "65.21.141.231", port: 17728, peerPubKey: ADNL_PUB_KEY).run()
-            
-            /// Connect to server
-            try? Client(app: self.app, ipAddress: SERVER_IP, port: SERVER_PORT, peerPubKey: PUBLIC_KEY).run()
-        }.start()
-        
-        Thread { [weak self] in
-            guard let self = self else { return }
             try? server.run()
         }.start()
+        
+//        Thread { [weak self] in
+//            guard let self = self else { return }
+//            sleep(1)
+////            try? Client(app: self.app, ipAddress: "65.21.141.231", port: 17728, peerPubKey: ADNL_PUB_KEY).run()
+//            /// Connect to server
+//            try? Client(ipAddress: SERVER_IP, port: SERVER_PORT, peerPubKey: PUBLIC_KEY).run()
+//        }.start()
+    }
+    
+    func clientExist(_ key: String) -> Bool {
+        clients[key] != nil || server.clients[key] != nil
     }
 }
+
+

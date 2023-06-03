@@ -16,12 +16,11 @@ extension TCPController {
         let handshake: Data = try ADNLHandshake.adnlHandshake(keys: client.cipher.keys,
                                                               params: client.cipher.params,
                                                               address: client.cipher.address)
-        pe("CLIENT SEND HANDSHAKE", handshake.toHexadecimal)
         let buffer: ByteBuffer = client.channel.allocator.buffer(bytes: handshake)
         client.channel.writeAndFlush(NIOAny(buffer), promise: nil)
     }
     
-    static func handshakeResponse(app: Application, context: ChannelHandlerContext, server: Server, data: Data) {
+    static func handshakeResponse(context: ChannelHandlerContext, server: Server, data: Data) {
         do {
             let cipher: ADNLCipher = try ADNLHandshake.adnlHandshakeAssets(data, secretKey: SECRET_KEY)
             let data = try cipher.encryptor.adnlSerializeMessage(data: Data())
@@ -32,16 +31,15 @@ extension TCPController {
                 switch result {
                 case .success(_):
                     do {
-                        try server.clients[context.channel.ipAddressWithHost()] = .init(app: app,
-                                                                                        signer: cipher,
+                        try server.clients[context.channel.ipAddressWithHost()] = .init(signer: cipher,
                                                                                         channel: context.channel,
                                                                                         type: .server,
                                                                                         connected: true)
                     } catch {
-                        errorPrint(app, error)
+                        errorPrint(error)
                     }
                 case let .failure(error):
-                    errorPrint(app, error)
+                    errorPrint(error)
                 }
             }
         } catch {

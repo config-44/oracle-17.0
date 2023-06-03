@@ -11,8 +11,6 @@ import Vapor
 import Dispatch
 import Logging
 
-let ADNL_PUB_KEY = "BYSVpL7aPk0kU5CtlsIae/8mf2B/NrBi7DKmepcjX6Q="
-
 @main
 enum Entrypoint {
     static func main() async throws {
@@ -20,10 +18,9 @@ enum Entrypoint {
         try LoggingSystem.bootstrap(from: &env)
         let evetnLoop: EventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let app: Application = .init(env, Application.EventLoopGroupProvider.shared(evetnLoop))
-        
         defer { app.shutdown() }
         try await configure(app)
-        TCPConnectionCenter.initialize(app: app, serverIp: SERVER_IP, serverPort: SERVER_PORT, serverSecret: SECRET_KEY, peers: [])
+        TCPConnectionCenter.initialize(serverIp: SERVER_IP, serverPort: SERVER_PORT, serverSecret: SECRET_KEY, peers: [])
         try TCPConnectionCenter.shared.run()
         try await app.runFromAsyncMainEntrypoint()
     }

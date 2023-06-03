@@ -22,8 +22,10 @@ enum TCPRouter: UInt32 {
         switch route {
         case .adnlTime:
             try TCPController.adnlTimeParseResponse(client: client, decryptedData: decryptedData)
-        default:
-            break
+        case .ping:
+            try TCPController.pong(client: client)
+        case .pong:
+            client.receivedPong = true
         }
     }
     

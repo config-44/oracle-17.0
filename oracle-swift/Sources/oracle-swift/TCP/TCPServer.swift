@@ -13,10 +13,9 @@ import Vapor
 import adnl_swift
 
 class Server {
-    let app: Application
     let ipAddress: String
     let port: Int
-    var _clients: [String: ClientServer] = [:]
+    private var _clients: [String: ClientServer] = [:]
     private let lock: NSLock = .init()
     var clients: [String: ClientServer] {
         get {
@@ -31,8 +30,7 @@ class Server {
         }
     }
     
-    init(app: Application, ipAddress: String, port: Int, secretKey: String) {
-        self.app = app
+    init(ipAddress: String, port: Int, secretKey: String) {
         self.ipAddress = ipAddress
         self.port = port
     }
@@ -47,7 +45,7 @@ class Server {
             .childChannelInitializer { channel in
                 // Ensure we don't read faster than we can write by adding the BackPressureHandler into the pipeline.
                 channel.pipeline.addHandler(BackPressureHandler()).flatMap { v in
-                    return channel.pipeline.addHandler(TCPServerHandler(app: self.app, server: self))
+                    return channel.pipeline.addHandler(TCPServerHandler(server: self))
                 }
             }
         // Enable SO_REUSEADDR for the accepted Channels
@@ -66,11 +64,9 @@ class Server {
 private final class TCPServerHandler: ChannelInboundHandler {
     public typealias InboundIn = ByteBuffer
     public typealias OutboundOut = ByteBuffer
-    private let app: Application
     private var server: Server
     
-    init(app: Application, server: Server) {
-        self.app = app
+    init(server: Server) {
         self.server = server
     }
     
@@ -102,9 +98,17 @@ private final class TCPServerHandler: ChannelInboundHandler {
     public func channelActive(context: ChannelHandlerContext) {
         print("Client connected to \(context.remoteAddress!)")
         do {
-            try server.clients[context.channel.ipAddressWithHost()] = .init(app: app, type: .server)
+            #if DEBUG
+            try server.clients[context.channel.ipAddressWithHost()] = .init(type: .server)
+            #else
+            if try TCPConnectionCenter.shared.clientExist(context.channel.ipAddressWithHost()) {
+                try server.clients[context.channel.ipAddressWithHost()] = .init(type: .server)
+            } else {
+                logger.info("Client exists")
+            }
+            #endif
         } catch {
-            errorPrint(app, error)
+            errorPrint(error)
         }
     }
     
@@ -115,7 +119,7 @@ private final class TCPServerHandler: ChannelInboundHandler {
             pe("SERVER - READ")
             var byteBuffer: ByteBuffer = self.unwrapInboundIn(data)
             guard let readableBytes = byteBuffer.readBytes(length: byteBuffer.readableBytes) else {
-                app.logger.warning("TCP - readableBytes not found")
+                logger.warning("TCP - readableBytes not found")
                 return
             }
             let data: Data = .init(readableBytes)
@@ -125,47 +129,16 @@ private final class TCPServerHandler: ChannelInboundHandler {
             }
             
             if !client.connected {
-                TCPController.handshakeResponse(app: app, context: context, server: server, data: data)
+                TCPController.handshakeResponse(context: context, server: server, data: data)
             }
             
             if client.connected {
                 let decryptedData = try client.cipher.decryptor.adnlDeserializeMessage(data: data)
-                pe(decryptedData.toHexadecimal)
+                /// ROUTING
+                try TCPRouter.getRoute(client: client, decryptedData: decryptedData)
             }
-            
-            //        ///parse handshake
-            //        let handshake = try! ADNLHandshake.adnlParseHandshake(data)
-            //        let receivedClientPublic = handshake.senderPubKey.toHexadecimal
-            //        pe("SERVER - receiver_address or shortLocalNodeId\n", handshake.shortLocalNodeId.toHexadecimal)
-            //        pe("SERVER - receivedClientPublic", receivedClientPublic)
-            //        pe("SERVER - Proof CheckSum SHA-256(aes_params)", handshake.checkSum.toHexadecimal)
-            //        pe("SERVER - Payload E(aes_params)", handshake.encryptedData.toHexadecimal)
-            //
-            //        let signer: TCPCipher = try! .init(serverSecret: SECRET_KEY, peerPubKey: receivedClientPublic)
-            ////        let signer: TCPSigner = try! .init(serverSecret: SECRET_KEY, peerPubKey: PUBLIC_KEY)
-            //        let signerDecryptedData = try! signer.decryptor.update(handshake.encryptedData)
-            //        pe("SERVER - decrypted payload - 0", signerDecryptedData.toHexadecimal)
-            //        pe("SERVER - decrypted payload SHA 256 - 0", signerDecryptedData.sha256().toHexadecimal)
-            //
-            //
-            //        let hhhh = try! ADNLHandshake.adnlHandshakeAssets(data, secretKey: SECRET_KEY)
-            ////        let g = try! hhhh.encryptor.adnlSerializeMessage(data: Data([1,2,3,4]))
-            //        let g = try! hhhh.encryptor.adnlSerializeMessage(data: Data())
-            //        pe("SERVER SENT", g.toHexadecimal)
-            //        let b = context.channel.allocator.buffer(data: g)
-            //        context.writeAndFlush(NIOAny(b), promise: nil)
-            
-            //        let gggg = try! signer.decryptor.adnlDeserializeMessage(data: handshake.encryptedData)
-            //        gggg.toHexadecimal
-            //        pe("GGGG", gggg.toHexadecimal)
-            //        pe("GGGG", gggg.sha256().toHexadecimal)
-            //
-            //        pe("sender pubkey", pub)
-            //        pe("server toHexadecimal", data.toHexadecimal)
-            //        let decryptedData = try client.clientServer.signer.decryptor.adnlDeserializeMessage(data: data)
-            //        context.writeAndFlush(data, promise: nil)
         } catch {
-            errorPrint(app, error)
+            errorPrint(error)
         }
     }
     

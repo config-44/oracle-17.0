@@ -13,7 +13,6 @@ import adnl_swift
 import Vapor
 
 final class Client {
-    private let app: Application
     private let ipAddress: String
     private let port: Int
     private let peerPubKey: String
@@ -32,15 +31,13 @@ final class Client {
         }
     }
     
-    init(app: Application, ipAddress: String, port: Int, peerPubKey: String) throws {
-        self.app = app
+    init(ipAddress: String, port: Int, peerPubKey: String) throws {
         self.ipAddress = ipAddress
         self.port = port
         self.peerPubKey = peerPubKey
-        let tempPrivateKey = "0cd07f83cdab454b02b6533861fe6555acf3f8ef9e1c8e5086a5e2297d1942e2"
-        let signer: ADNLCipher = try .init(serverSecret: tempPrivateKey, peerPubKey: peerPubKey, mode: .client)
-        self._clientServer = ClientServer(app: app,
-                                          signer: signer,
+//        let tempPrivateKey = "0cd07f83cdab454b02b6533861fe6555acf3f8ef9e1c8e5086a5e2297d1942e2"
+        let signer: ADNLCipher = try .init(peerPubKey: peerPubKey, mode: .client)
+        self._clientServer = ClientServer(signer: signer,
                                           type: .client)
     }
     
@@ -51,11 +48,27 @@ final class Client {
         // Enable SO_REUSEADDR.
             .channelOption(ChannelOptions.socketOption(.so_reuseaddr), value: 1)
             .channelInitializer { channel in
-                channel.pipeline.addHandler(TCPClientHandler(app: self.app, client: self))
+                channel.pipeline.addHandler(TCPClientHandler(client: self))
             }
         
         let channel: Channel = try bootstrap.connect(host: ipAddress, port: port).wait()
+        pingMaker()
         try channel.closeFuture.wait()
+    }
+    
+    func pingMaker() {
+        Thread { [weak self] in
+            while true {
+                guard let self = self else { pe("exit ping"); return }
+                pe("delay", self.clientServer.pingDelaySec)
+                sleep(self.clientServer.pingDelaySec)
+                do {
+                    try TCPController.ping(client: self.clientServer)
+                } catch {
+                    errorPrint(error)
+                }
+            }
+        }.start()
     }
     
     deinit {
@@ -66,11 +79,9 @@ final class Client {
 private final class TCPClientHandler: ChannelInboundHandler {
     typealias InboundIn = ByteBuffer
     typealias OutboundOut = ByteBuffer
-    private let app: Application
     private var client: Client
     
-    init(app: Application, client: Client) {
-        self.app = app
+    init(client: Client) {
         self.client = client
     }
     
@@ -81,7 +92,7 @@ private final class TCPClientHandler: ChannelInboundHandler {
             /// SEND HANDSHAKE
             try TCPController.handshakeRequest(client: client.clientServer)
         } catch {
-            self.app.logger.critical("\(OError(String(describing: error)).localizedDescription)")
+            logger.critical("\(OError(String(describing: error)).localizedDescription)")
         }
     }
     
@@ -89,16 +100,10 @@ private final class TCPClientHandler: ChannelInboundHandler {
         do {
             var byteBuffer: ByteBuffer = self.unwrapInboundIn(data)
             guard let readableBytes = byteBuffer.readBytes(length: byteBuffer.readableBytes) else {
-                app.logger.warning("TCP - readableBytes not found")
+                logger.warning("TCP - readableBytes not found")
                 return
             }
             let data: Data = .init(readableBytes)
-            ///================
-//            pe("CLIENT READ - DATA BEFORE DECRYPT: ", data.toHexadecimal)
-//            let decrData: Data = try client.clientServer.signer.decryptor.update(data)
-//            pe("CLIENT decrData", decrData.toHexadecimal)
-//            pe("CLIENT decrData SHA 256: ", decrData.sha256().toHexadecimal)
-            ///================
             let decryptedData = try client.clientServer.cipher.decryptor.adnlDeserializeMessage(data: data)
             
             /// ROUTING
@@ -107,14 +112,14 @@ private final class TCPClientHandler: ChannelInboundHandler {
             } else {
                 if decryptedData.count == 0 {
                     client.clientServer.connected = true
-                    TCPController.ping(client: client.clientServer)
+                    try TCPController.ping(client: client.clientServer)
                 } else {
-                    self.app.logger.warning("Handshake failed")
+                    logger.warning("Handshake failed")
                     context.channel.close(promise: nil)
                 }
             }
         } catch {
-            errorPrint(self.app, error)
+            errorPrint(error)
         }
     }
     
@@ -149,7 +154,7 @@ private final class TCPClientHandler: ChannelInboundHandler {
     }
     
     public func errorCaught(context: ChannelHandlerContext, error: Error) {
-        self.app.logger.warning("\(OError(String(describing: error)).localizedDescription)")
+        logger.warning("\(OError(String(describing: error)).localizedDescription)")
         // As we are not really interested getting notified on success or failure we just pass nil as promise to
         // reduce allocations.
         context.close(promise: nil)
