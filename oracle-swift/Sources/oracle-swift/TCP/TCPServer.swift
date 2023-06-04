@@ -15,20 +15,7 @@ import adnl_swift
 class Server {
     let ipAddress: String
     let port: Int
-    private var _clients: [String: ClientServer] = [:]
-    private let lock: NSLock = .init()
-    var clients: [String: ClientServer] {
-        get {
-            lock.lock()
-            defer { lock.unlock() }
-            return _clients
-        }
-        set {
-            lock.lock()
-            defer { lock.unlock() }
-            _clients = newValue
-        }
-    }
+    @Atomic var clients: [String: ClientServer] = [:]
     
     init(ipAddress: String, port: Int, secretKey: String) {
         self.ipAddress = ipAddress

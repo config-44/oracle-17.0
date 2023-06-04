@@ -13,12 +13,16 @@ var packageDependencies: [Package.Dependency] = [
     .package(url: "https://github.com/nerzh/SwiftFileUtils", .upToNextMinor(from: "1.3.0")),
     .package(url: "https://github.com/nerzh/swift-extensions-pack-linux", .upToNextMajor(from: "1.0.0")),
     .package(url: "https://github.com/apple/swift-log", .upToNextMajor(from: "1.0.0")),
+    .package(url: "https://github.com/GraphQLSwift/GraphQLWS", .upToNextMajor(from: "0.0.1")),
+    .package(url: "https://github.com/apollographql/apollo-ios", .upToNextMajor(from: "1.0.0")),
 ]
 
 var mainTarget: [Target.Dependency] = [
     .product(name: "adnl-swift", package: "adnl-swift"),
     .product(name: "Vapor", package: "vapor"),
     .product(name: "EverscaleClientSwift", package: "everscale-client-swift"),
+    .product(name: "GraphQLWS", package: "GraphQLWS"),
+    .product(name: "ApolloWebSocket", package: "apollo-ios"),
 ]
 
 var ctrlTarget: [Target.Dependency] = [

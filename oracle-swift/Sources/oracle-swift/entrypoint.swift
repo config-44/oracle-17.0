@@ -20,8 +20,12 @@ enum Entrypoint {
         let app: Application = .init(env, Application.EventLoopGroupProvider.shared(evetnLoop))
         defer { app.shutdown() }
         try await configure(app)
-        TCPConnectionCenter.initialize(serverIp: SERVER_IP, serverPort: SERVER_PORT, serverSecret: SECRET_KEY, peers: [])
-        try TCPConnectionCenter.shared.run()
+        /// TCP
+//        TCPConnectionCenter.initialize(serverIp: SERVER_IP, serverPort: SERVER_PORT, serverSecret: SECRET_KEY, peers: [])
+//        try TCPConnectionCenter.shared.run()
+        
+        try await OracleService.start()
+        
         try await app.runFromAsyncMainEntrypoint()
     }
 }

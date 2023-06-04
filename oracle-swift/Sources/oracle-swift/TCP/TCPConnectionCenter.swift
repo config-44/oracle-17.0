@@ -18,25 +18,13 @@ struct TCPRemotePeer {
 
 class ClientServer {
     private let lock: NSLock = .init()
-    private var _cipher: ADNLCipher!
-    private var _channel: Channel!
-    private var _type: ConnectType
-    private var _connected: Bool = false
-    private var _pingDelaySec: UInt32
     private var _receivedPong: Bool = false
     private var lastPongTime: UInt = Date().toSeconds()
-    var pingDelaySec: UInt32 {
-        get {
-            lock.lock()
-            defer { lock.unlock() }
-            return _pingDelaySec
-        }
-        set {
-            lock.lock()
-            defer { lock.unlock() }
-            _pingDelaySec = newValue
-        }
-    }
+    @Atomic var cipher: ADNLCipher!
+    @Atomic var channel: Channel!
+    @Atomic var type: ConnectType
+    @Atomic var connected: Bool = false
+    @Atomic var pingDelaySec: UInt32
     var receivedPong: Bool {
         get {
             lock.lock()
@@ -50,54 +38,7 @@ class ClientServer {
             _receivedPong = newValue
         }
     }
-    var cipher: ADNLCipher {
-        get {
-            lock.lock()
-            defer { lock.unlock() }
-            return _cipher
-        }
-        set {
-            lock.lock()
-            defer { lock.unlock() }
-            _cipher = newValue
-        }
-    }
-    var channel: Channel {
-        get {
-            lock.lock()
-            defer { lock.unlock() }
-            return _channel
-        }
-        set {
-            lock.lock()
-            defer { lock.unlock() }
-            _channel = newValue
-        }
-    }
-    var type: ConnectType {
-        get {
-            lock.lock()
-            defer { lock.unlock() }
-            return _type
-        }
-        set {
-            lock.lock()
-            defer { lock.unlock() }
-            _type = newValue
-        }
-    }
-    var connected: Bool {
-        get {
-            lock.lock()
-            defer { lock.unlock() }
-            return _connected
-        }
-        set {
-            lock.lock()
-            defer { lock.unlock() }
-            _connected = newValue
-        }
-    }
+    
     
     init(signer: ADNLCipher? = nil,
          channel: Channel? = nil,
@@ -105,11 +46,11 @@ class ClientServer {
          connected: Bool = false,
          pingDelaySec: UInt32 = 5
     ) {
-        self._cipher = signer
-        self._channel = channel
-        self._type = type
-        self._connected = connected
-        self._pingDelaySec = pingDelaySec
+        self.cipher = signer
+        self.channel = channel
+        self.type = type
+        self.connected = connected
+        self.pingDelaySec = pingDelaySec
         pingWatcher()
     }
     

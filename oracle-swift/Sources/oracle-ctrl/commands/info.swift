@@ -72,12 +72,7 @@ extension OracleCtrl {
                                                                             boc: data,
                                                                             allow_partial: true))
             logger.notice("proposal_list")
-//            (out.data.toDictionary()?["_proposal_list"] as? [String: String])?.forEach { (key: String, value: Any?) in
-//                logger.notice("\(key): \(value ?? "")")
-//            }
-            
             for (key, value) in ((out.data.toDictionary()?["_proposal_list"] as? [String: String]) ?? [:]) {
-                pe(value)
                 let out = try await client.abi.decode_boc(TSDKParamsOfDecodeBoc(params: [.init(name: "prefix", type: "uint8")], boc: value, allow_partial: true))
                 let pfx = UInt8(out.data.toDictionary()?["prefix"] as! String)
                 if (pfx == 0x01) {
@@ -99,6 +94,24 @@ extension OracleCtrl {
                 } else if (pfx == 0x02) {
                     logger.notice("\(key): 0x02...")
                 }
+                logger.notice("---------------------------------------")
+            }
+            
+            logger.notice("Current_list")
+            for (key, value) in ((out.data.toDictionary()?["_current_list"] as? [String: String]) ?? [:]) {
+                let out = try await client.abi.decode_boc(TSDKParamsOfDecodeBoc(
+                    params: [
+                        .init(name: "pubKey", type: "uint256"),
+                        .init(name: "adnl", type: "uint256"),
+                        .init(name: "stake", type: "varuint16")
+                    ],
+                    boc: value,
+                    allow_partial: true))
+                
+                logger.notice("id: \(key)")
+                logger.notice("stake: \(BigInt(out.data.toDictionary()?["stake"] as! String)?.nanoCrystalToCrystal ?? "")")
+                logger.notice("pubKey: \(out.data.toDictionary()?["pubKey"] as! String)")
+                logger.notice("adnl: \(out.data.toDictionary()?["adnl"] as! String)")
                 logger.notice("---------------------------------------")
             }
         }

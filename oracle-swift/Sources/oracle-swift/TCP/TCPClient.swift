@@ -16,20 +16,7 @@ final class Client {
     private let ipAddress: String
     private let port: Int
     private let peerPubKey: String
-    private let lock: NSLock = .init()
-    private var _clientServer: ClientServer
-    var clientServer: ClientServer {
-        get {
-            lock.lock()
-            defer { lock.unlock() }
-            return _clientServer
-        }
-        set {
-            lock.lock()
-            defer { lock.unlock() }
-            _clientServer = newValue
-        }
-    }
+    @Atomic var clientServer: ClientServer
     
     init(ipAddress: String, port: Int, peerPubKey: String) throws {
         self.ipAddress = ipAddress
@@ -37,8 +24,7 @@ final class Client {
         self.peerPubKey = peerPubKey
 //        let tempPrivateKey = "0cd07f83cdab454b02b6533861fe6555acf3f8ef9e1c8e5086a5e2297d1942e2"
         let signer: ADNLCipher = try .init(peerPubKey: peerPubKey, mode: .client)
-        self._clientServer = ClientServer(signer: signer,
-                                          type: .client)
+        self.clientServer = ClientServer(signer: signer, type: .client)
     }
     
     func run() throws {
@@ -60,7 +46,6 @@ final class Client {
         Thread { [weak self] in
             while true {
                 guard let self = self else { pe("exit ping"); return }
-                pe("delay", self.clientServer.pingDelaySec)
                 sleep(self.clientServer.pingDelaySec)
                 do {
                     try TCPController.ping(client: self.clientServer)
