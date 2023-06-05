@@ -16,7 +16,7 @@ var VAPOR_PORT: Int!
 var SERVER_IP: String!
 var SERVER_PORT: Int!
 var GQL_WSS_ENDPOINT: String!
-
+var EYE_CONTRACT: String!
 
 func getAllEnvConstants(_ app: Application) throws {
     let env = try Environment.detect()
@@ -46,6 +46,9 @@ func getAllEnvConstants(_ app: Application) throws {
     
     guard let variable_7 = Environment.get("GQL_WSS_ENDPOINT") else { fatalError("Set GQL_WSS_ENDPOINT to .env.\(env)") }
     GQL_WSS_ENDPOINT = variable_7
+    
+    guard let variable_8 = Environment.get("EYE_CONTRACT") else { fatalError("Set EYE_CONTRACT to .env.\(env)") }
+    EYE_CONTRACT = variable_8
 }
 
 

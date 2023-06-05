@@ -8,7 +8,7 @@
 import Foundation
 
 extension WSSHandler {
-    class func pong(wsClient: OracleWSSService) {
-        wsClient.lastPingUnixTime = Date().toSeconds()
+    class func pong(service: OracleWSSService) {
+        service.lastPingUnixTime = Date().toSeconds()
     }
 }
