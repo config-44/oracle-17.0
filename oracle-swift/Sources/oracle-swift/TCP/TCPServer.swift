@@ -116,7 +116,7 @@ private final class TCPServerHandler: ChannelInboundHandler {
             }
             
             if !client.connected {
-                TCPController.handshakeResponse(context: context, server: server, data: data)
+                TCPHandler.handshakeResponse(context: context, server: server, data: data)
             }
             
             if client.connected {

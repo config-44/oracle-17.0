@@ -9,7 +9,7 @@ import Foundation
 import NIOCore
 import Vapor
 
-extension TCPController {
+extension TCPHandler {
     static func adnlTimeRequest(client: ClientServer) throws {
         let TL_GETTIME = "7af98bb435263e6c95d6fecb497dfd0aa5f031e7d412986b5ce720496db512052e8f2d100cdf068c7904345aad16000000000000"
         let data = try client.cipher.encryptor.adnlSerializeMessage(data: TL_GETTIME.dataFromHex!)

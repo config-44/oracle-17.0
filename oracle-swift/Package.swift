@@ -11,18 +11,13 @@ var packageDependencies: [Package.Dependency] = [
     .package(url: "https://github.com/bytehubio/BigInt.git", from: "5.2.1"),
     .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMinor(from: "1.2.2")),
     .package(url: "https://github.com/nerzh/SwiftFileUtils", .upToNextMinor(from: "1.3.0")),
-    .package(url: "https://github.com/nerzh/swift-extensions-pack-linux", .upToNextMajor(from: "1.0.0")),
     .package(url: "https://github.com/apple/swift-log", .upToNextMajor(from: "1.0.0")),
-    .package(url: "https://github.com/GraphQLSwift/GraphQLWS", .upToNextMajor(from: "0.0.1")),
-    .package(url: "https://github.com/nerzh/apollo-ios", branch: "main"),
 ]
 
 var mainTarget: [Target.Dependency] = [
     .product(name: "adnl-swift", package: "adnl-swift"),
     .product(name: "Vapor", package: "vapor"),
     .product(name: "EverscaleClientSwift", package: "everscale-client-swift"),
-    .product(name: "GraphQLWS", package: "GraphQLWS"),
-    .product(name: "ApolloWebSocket", package: "apollo-ios"),
 ]
 
 var ctrlTarget: [Target.Dependency] = [
@@ -30,7 +25,6 @@ var ctrlTarget: [Target.Dependency] = [
     .product(name: "ArgumentParser", package: "swift-argument-parser"),
     .product(name: "FileUtils", package: "SwiftFileUtils"),
     .product(name: "adnl-swift", package: "adnl-swift"),
-    .product(name: "SwiftExtensionsPackLinux", package: "swift-extensions-pack-linux"),
     .product(name: "Logging", package: "swift-log"),
 ]
 

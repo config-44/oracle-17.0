@@ -8,9 +8,9 @@
 import Foundation
 
 class TransactionsSub {
-    var ws: WebSocketClient1 = WebSocketClient1(stringURL: "")
+    var ws: WebSocketClient = WebSocketClient(stringURL: "")
     
     init(stringURL: String) {
-        self.ws = WebSocketClient1(stringURL: stringURL)
+        self.ws = WebSocketClient(stringURL: stringURL)
     }
 }

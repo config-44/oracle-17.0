@@ -48,7 +48,7 @@ final class Client {
                 guard let self = self else { pe("exit ping"); return }
                 sleep(self.clientServer.pingDelaySec)
                 do {
-                    try TCPController.ping(client: self.clientServer)
+                    try TCPHandler.ping(client: self.clientServer)
                 } catch {
                     errorPrint(error)
                 }
@@ -75,7 +75,7 @@ private final class TCPClientHandler: ChannelInboundHandler {
             client.clientServer.channel = context.channel
             try TCPConnectionCenter.shared.clients[context.channel.ipAddressWithHost()] = client.clientServer
             /// SEND HANDSHAKE
-            try TCPController.handshakeRequest(client: client.clientServer)
+            try TCPHandler.handshakeRequest(client: client.clientServer)
         } catch {
             logger.critical("\(OError(String(describing: error)).localizedDescription)")
         }
@@ -97,7 +97,7 @@ private final class TCPClientHandler: ChannelInboundHandler {
             } else {
                 if decryptedData.count == 0 {
                     client.clientServer.connected = true
-                    try TCPController.ping(client: client.clientServer)
+                    try TCPHandler.ping(client: client.clientServer)
                 } else {
                     logger.warning("Handshake failed")
                     context.channel.close(promise: nil)

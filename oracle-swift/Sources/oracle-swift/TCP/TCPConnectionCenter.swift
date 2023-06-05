@@ -87,41 +87,20 @@ extension ClientServer {
 }
 
 class TCPConnectionCenter {
-    private var lock: NSLock = .init()
     private static var lock: NSLock = .init()
-    private var _clients: [String: ClientServer] = [:]
-    private var _server: Server
+    @Atomic var clients: [String: ClientServer] = [:]
+    @Atomic var server: Server
     private static var _shared: TCPConnectionCenter!
-    
-    var clients: [String: ClientServer] {
-        get {
-            lock.lock()
-            defer { lock.unlock() }
-            return _clients
-        }
-        set {
-            lock.lock()
-            defer { lock.unlock() }
-            _clients = newValue
-        }
-    }
-    var server: Server {
-        get {
-            lock.lock()
-            defer { lock.unlock() }
-            return _server
-        }
-        set {
-            lock.lock()
-            defer { lock.unlock() }
-            _server = newValue
-        }
-    }
+
     static var shared: TCPConnectionCenter {
         get {
             lock.lock()
             defer { lock.unlock() }
-            guard let shrd = _shared else { fatalError("TCPConnectionCenter shared object not initialized") }
+            guard let shrd = _shared else {
+                let error: String = "TCPConnectionCenter shared object not initialized"
+                logg(error, .critical)
+                fatalError(error)
+            }
             return shrd
         }
         set {
@@ -132,8 +111,8 @@ class TCPConnectionCenter {
     }
     
     private init(serverIp: String, serverPort: Int, serverSecret: String, peers: [TCPRemotePeer]) {
-        self._clients = [:]
-        self._server = Server(ipAddress: serverIp, port: serverPort, secretKey: serverSecret)
+        self.clients = [:]
+        self.server = Server(ipAddress: serverIp, port: serverPort, secretKey: serverSecret)
     }
     
     static func initialize(serverIp: String, serverPort: Int, serverSecret: String, peers: [TCPRemotePeer]) {

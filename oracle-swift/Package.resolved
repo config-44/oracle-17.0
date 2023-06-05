@@ -1,15 +1,6 @@
 {
   "pins" : [
     {
-      "identity" : "apollo-ios",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/nerzh/apollo-ios",
-      "state" : {
-        "branch" : "main",
-        "revision" : "759a665fba28b5a2e4fa51897158f9817b99bc03"
-      }
-    },
-    {
       "identity" : "async-http-client",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swift-server/async-http-client.git",
@@ -73,51 +64,6 @@
       }
     },
     {
-      "identity" : "graphiti",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/GraphQLSwift/Graphiti.git",
-      "state" : {
-        "revision" : "b4942cf74de9443afa3f3a00f23b482a13aee736",
-        "version" : "1.10.0"
-      }
-    },
-    {
-      "identity" : "graphql",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/GraphQLSwift/GraphQL.git",
-      "state" : {
-        "revision" : "1b9d48ce0f0ad8280f75ce9914579aaac5881bc6",
-        "version" : "2.5.1"
-      }
-    },
-    {
-      "identity" : "graphqlrxswift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/GraphQLSwift/GraphQLRxSwift.git",
-      "state" : {
-        "revision" : "c7ec6595f92ef5d77c06852e4acc4cd46a753622",
-        "version" : "0.0.4"
-      }
-    },
-    {
-      "identity" : "graphqlws",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/GraphQLSwift/GraphQLWS",
-      "state" : {
-        "revision" : "96b4952df8d3d9909cab2d822935c0c60f15385c",
-        "version" : "0.1.1"
-      }
-    },
-    {
-      "identity" : "inflectorkit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/mattt/InflectorKit",
-      "state" : {
-        "revision" : "d8cbcc04972690aaa5fc760a2b9ddb3e9f0decd7",
-        "version" : "1.0.0"
-      }
-    },
-    {
       "identity" : "multipart-kit",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/vapor/multipart-kit.git",
@@ -133,24 +79,6 @@
       "state" : {
         "revision" : "611bc45c5dfb1f54b84d99b89d1f72191fb6b71b",
         "version" : "4.7.2"
-      }
-    },
-    {
-      "identity" : "rxswift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ReactiveX/RxSwift.git",
-      "state" : {
-        "revision" : "9dcaa4b333db437b0fbfaf453fad29069044a8b4",
-        "version" : "6.6.0"
-      }
-    },
-    {
-      "identity" : "sqlite.swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/stephencelis/SQLite.swift.git",
-      "state" : {
-        "revision" : "7a2e3cd27de56f6d396e84f63beefd0267b55ccb",
-        "version" : "0.14.1"
       }
     },
     {
@@ -205,15 +133,6 @@
       "state" : {
         "revision" : "33a20e650c33f6d72d822d558333f2085effa3dc",
         "version" : "2.5.0"
-      }
-    },
-    {
-      "identity" : "swift-extensions-pack-linux",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/nerzh/swift-extensions-pack-linux",
-      "state" : {
-        "revision" : "074336fd5ea2dc5f4e95b8d68d73228ae5a6982f",
-        "version" : "1.0.0"
       }
     },
     {

@@ -10,7 +10,7 @@ import NIOCore
 import adnl_swift
 import Vapor
 
-extension TCPController {
+extension TCPHandler {
     
     static func handshakeRequest(client: ClientServer) throws {
         let handshake: Data = try ADNLHandshake.adnlHandshake(keys: client.cipher.keys,

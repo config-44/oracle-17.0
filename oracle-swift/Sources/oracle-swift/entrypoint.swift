@@ -24,7 +24,8 @@ enum Entrypoint {
 //        TCPConnectionCenter.initialize(serverIp: SERVER_IP, serverPort: SERVER_PORT, serverSecret: SECRET_KEY, peers: [])
 //        try TCPConnectionCenter.shared.run()
         
-        try await OracleService.start()
+        /// WSS
+        Task.detached { try await OracleWSSService.shared.start() }
         
         try await app.runFromAsyncMainEntrypoint()
     }
