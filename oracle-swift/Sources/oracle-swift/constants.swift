@@ -17,6 +17,7 @@ var SERVER_IP: String!
 var SERVER_PORT: Int!
 var GQL_WSS_ENDPOINT: String!
 var EYE_CONTRACT: String!
+var LAST_TX_FILE_DB_PATH: String!
 
 func getAllEnvConstants(_ app: Application) throws {
     let env = try Environment.detect()
@@ -49,6 +50,9 @@ func getAllEnvConstants(_ app: Application) throws {
     
     guard let variable_8 = Environment.get("EYE_CONTRACT") else { fatalError("Set EYE_CONTRACT to .env.\(env)") }
     EYE_CONTRACT = variable_8
+    
+    guard let variable_9 = Environment.get("LAST_TX_FILE_DB_PATH") else { fatalError("Set LAST_TX_FILE_DB_PATH to .env.\(env)") }
+    LAST_TX_FILE_DB_PATH = variable_9
 }
 
 

@@ -18,6 +18,7 @@ var mainTarget: [Target.Dependency] = [
     .product(name: "adnl-swift", package: "adnl-swift"),
     .product(name: "Vapor", package: "vapor"),
     .product(name: "EverscaleClientSwift", package: "everscale-client-swift"),
+    .product(name: "FileUtils", package: "SwiftFileUtils"),
 ]
 
 var ctrlTarget: [Target.Dependency] = [
@@ -27,7 +28,6 @@ var ctrlTarget: [Target.Dependency] = [
     .product(name: "adnl-swift", package: "adnl-swift"),
     .product(name: "Logging", package: "swift-log"),
 ]
-
 
 #if os(Linux)
 packageDependencies.append(.package(url: "https://github.com/nerzh/adnl-swift", branch: "master"))

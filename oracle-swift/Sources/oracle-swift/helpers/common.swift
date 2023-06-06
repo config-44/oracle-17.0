@@ -22,6 +22,7 @@ public enum ErrorPrint {
     case warning
     case critical
     case info
+    case notice
 }
 
 public func errorPrint(_ error: Error, _ mode: ErrorPrint = .warning, _ line: Int = #line, _ function: String = #function) {
@@ -32,6 +33,8 @@ public func errorPrint(_ error: Error, _ mode: ErrorPrint = .warning, _ line: In
         logger.critical("\(makeError(OError(String(describing: error)), function, line).localizedDescription)")
     case .info:
         logger.info("\(makeError(OError(String(describing: error)), function, line).localizedDescription)")
+    case .notice:
+        logger.notice("\(makeError(OError(String(describing: error)), function, line).localizedDescription)")
     }
 }
 
@@ -40,7 +43,9 @@ let log = errorPrint
 public func logg(_ error: Error, _ mode: ErrorPrint = .warning, _ line: Int = #line, _ function: String = #function) {
     errorPrint(error, mode, line, function)
 }
-public func logg(_ text: String, _ mode: ErrorPrint = .info, _ line: Int = #line, _ function: String = #function) {
+public func logg(_ mode: ErrorPrint = .notice, _ line: Int = #line, _ function: String = #function, text: Any...) {
+    let content: [Any] = ["asdf"] + text
+    let text = content.map{"\($0)"}.join(" ")
     switch mode {
     case .warning:
         logger.warning("\(text)")
@@ -48,6 +53,8 @@ public func logg(_ text: String, _ mode: ErrorPrint = .info, _ line: Int = #line
         logger.critical("\(text)")
     case .info:
         logger.info("\(text)")
+    case .notice:
+        logger.notice("\(text)")
     }
 }
 

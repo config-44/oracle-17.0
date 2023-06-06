@@ -9,17 +9,22 @@ import Foundation
 import SwiftExtensionsPack
 
 public final class OracleWSSService {
-    static let shared: OracleWSSService = .init()
-    private let wsClient: WebSocketClient = .init(stringURL: GQL_WSS_ENDPOINT)
-    private var pingTimeOut: UInt32 = 14
-    private var checkPingTimeOut: UInt32 = 2
-    private var reconnecting: Bool = false
+    @Atomic static var shared: OracleWSSService = .init()
+    private var wsClient: WebSocketClient!
+    @Atomic private var pingTimeOut: UInt32 = 20
+    @Atomic private var checkPingTimeOut: UInt32 = 5
     var lastPingUnixTime: UInt = Date().toSeconds()
     @Atomic private var queryID: UInt = 0
     @Atomic private var requestsQueue: DispatchQueue = .init(label: "")
     private let lock: NSLock = .init()
     private var requests: [String: ((GQLResponse) async throws -> Void)] = [:]
     private var requestsContinuation: [String: CheckedContinuation<AnyValue, Error>] = [:]
+    
+    private var connectWatcherStarted: Bool = false
+    private var connectWatcherActive: Bool = true
+    
+    private var pingWatcherStarted: Bool = false
+    private var pingWatcherActive: Bool = true
     
     private init() {}
     
@@ -29,21 +34,26 @@ public final class OracleWSSService {
     }
     
     func start() async throws {
+        wsClient = .init(stringURL: GQL_WSS_ENDPOINT)
+        
         wsClient.onConnected { [weak self] ws in
             guard let self = self else { return }
-            logg("WSS Connected")
+            self.connectWatcherActive = false
+            self.pingWatcherActive = true
+            logg(text: "WSS Connected")
             try await ws.send(GQLRequest(type: .connection_init).toJson)
-            try await self.pingWatcher()
-            
+            if !pingWatcherStarted {
+                try await self.pingWatcher()
+            }
         }
         
-        wsClient.onText { text, ws in
+        wsClient.onText { [weak self] text, ws in
+            guard let self = self else { return }
             try await WSSRouter.routing(text: text, self)
-//            logg(text)
         }
         
         wsClient.onDisconnected { error in
-            logg(error ?? OError("Disconnected withou error"))
+            logg(error ?? makeError(OError("Disconnected withou error")))
         }
         
         wsClient.onError { error, ws in
@@ -57,11 +67,6 @@ public final class OracleWSSService {
         try await wsClient.send(text: text)
     }
     
-//    func send(request: GQLRequest, _ handler: @escaping ((GQLResponse) async throws -> Void)) async throws {
-//        setRequest(id: request.id, handler)
-//        try await send(text: request.toJson)
-//    }
-    
     func send(id: String, request: GQLRequest) async throws -> AnyValue {
         try await withCheckedThrowingContinuation { conn in
             setRequest(id: id, conn: conn)
@@ -70,30 +75,42 @@ public final class OracleWSSService {
                 do {
                     try await self.send(text: request.toJson)
                 } catch {
-                    conn.resume(throwing: OError(String(describing: error)))
                     self.deleteRequest(id: id)
+                    conn.resume(throwing: makeError(OError(String(describing: error))))
                 }
             }
         }
     }
     
-    func parseResponse(text: String) async throws {
-        let model: GQLResponse = try text.toModel(GQLResponse.self)
-        let conn: CheckedContinuation<AnyValue, Error> = try getRequest(id: model.id)
+    func parseResponse(text: String) throws -> GQLResponse {
+        pe(text)
+        let response: GQLResponse = try text.toModel(GQLResponse.self)
+        return response
+    }
+    
+    func handleResponse(response: GQLResponse) async throws {
+        let model: GQLResponse = response
+        guard let id = model.id else { return }
+        let conn: CheckedContinuation<AnyValue, Error> = try getRequest(id: id)
         if model.type == .data {
             guard let payload = model.payload else { throw OError("Payload not found") }
+            deleteRequest(id: id)
             if let data = payload.data {
-                
                 conn.resume(returning: data)
             } else if let errors = payload.errors, errors.count > 0 {
-                conn.resume(throwing: OError(errors.first!.message))
+                conn.resume(throwing: makeError(OError(errors.first!.message)))
             } else {
-                conn.resume(throwing: OError("Unknown response \(payload)"))
+                conn.resume(throwing: makeError(OError("Unknown response \(payload)")))
             }
         } else if model.type == .error {
-            conn.resume(throwing: OError("Unknown rules for response type \(model.type.rawValue)"))
+            deleteRequest(id: id)
+            conn.resume(throwing: makeError(OError("Unknown rules for response type \(model.type.rawValue)")))
         }
     }
+    
+//    private func terminate() async throws -> String {
+//        #"{"type":"connection_error"}"#
+//    }
     
     private func setRequest(id: String, _ handler: @escaping ((GQLResponse) async throws -> Void)) {
         lock.lock()
@@ -122,6 +139,9 @@ public final class OracleWSSService {
     
     private func connect() async throws {
         if wsClient.ws?.isClosed ?? true {
+            if !connectWatcherStarted {
+                try await connectWatcher()
+            }
             try await wsClient.connect(headers: ["Sec-WebSocket-Protocol": "graphql-ws"])
             lastPingUnixTime = Date().toSeconds()
         }
@@ -132,26 +152,46 @@ public final class OracleWSSService {
     }
     
     private func reconnect() async throws {
-        logg(#function)
-        reconnecting = true
+        logg(text: #function)
+        pingWatcherActive = false
+        connectWatcherActive = true
         try await disconnect()
-        try await connect()
-        reconnecting = false
+        try await start()
     }
     
     private func pingWatcher() async throws {
+        pingWatcherStarted = true
         Thread { [weak self] in
             while true {
                 guard let self = self else { return }
-                sleep(self.checkPingTimeOut)
+                sleep(Self.shared.checkPingTimeOut)
                 let diff: UInt = Date().toSeconds() - self.lastPingUnixTime
-                if (diff > UInt(self.pingTimeOut)) && !reconnecting {
+                pe(diff, ">", UInt(Self.shared.pingTimeOut))
+                if (diff > UInt(Self.shared.pingTimeOut)) && self.pingWatcherActive {
                     Task.detached { [weak self] in
-                        guard let self = self else { return }
-                        try await self.reconnect()
+                        try await self?.reconnect()
                     }
                 }
             }
         }.start()
+    }
+    
+    private func connectWatcher() async throws {
+        connectWatcherStarted = true
+        Thread { [weak self] in
+            while true {
+                if self == nil { return }
+                sleep(Self.shared.checkPingTimeOut)
+                if self?.connectWatcherActive ?? false {
+                    Task.detached { [weak self] in
+                        try await self?.reconnect()
+                    }
+                }
+            }
+        }.start()
+    }
+    
+    deinit {
+        logg(text: "\(Self.self) deinit")
     }
 }

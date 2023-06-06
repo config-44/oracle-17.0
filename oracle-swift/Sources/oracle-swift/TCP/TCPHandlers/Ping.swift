@@ -15,7 +15,7 @@ extension TCPHandler {
         var data = TCPRouter.makeRequestWithRoute(.ping, data: Data())
         data = try client.cipher.encryptor.adnlSerializeMessage(data: data)
         let buffer = client.channel.allocator.buffer(bytes: data)
-        logg("ping")
+        logg(text: "ping")
         client.channel.writeAndFlush(NIOAny(buffer), promise: nil)
     }
     
@@ -23,7 +23,7 @@ extension TCPHandler {
         var data = TCPRouter.makeRequestWithRoute(.pong, data: Data())
         data = try client.cipher.encryptor.adnlSerializeMessage(data: data)
         let buffer = client.channel.allocator.buffer(bytes: data)
-        logg("pong")
+        logg(text: "pong")
         client.receivedPong = true
         client.channel.writeAndFlush(NIOAny(buffer), promise: nil)
     }

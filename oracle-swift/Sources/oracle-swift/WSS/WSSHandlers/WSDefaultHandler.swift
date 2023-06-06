@@ -9,7 +9,7 @@ import Foundation
 
 extension WSSHandler {
     
-    class func defaultHandler(service: OracleWSSService, text: String) async throws {
-        try await service.parseResponse(text: text)
+    class func defaultHandler(service: OracleWSSService, response: GQLResponse) async throws {
+        try await service.handleResponse(response: response)
     }
 }

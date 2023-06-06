@@ -16,7 +16,20 @@ final class WebSocketClient {
     
     var url: URL
     private var eventLoopGroup: EventLoopGroup
-    @Atomic var ws: WebSocket?
+    private let lock: NSLock = .init()
+    private weak var _ws: WebSocket?
+    weak var ws: WebSocket? {
+        get {
+            lock.lock()
+            defer { lock.unlock() }
+            return _ws
+        }
+        set {
+            lock.lock()
+            defer { lock.unlock() }
+            _ws = newValue
+        }
+    }
     
     init(stringURL: String, coreCount: Int = System.coreCount) {
         url = URL(string: stringURL)!
@@ -79,15 +92,15 @@ final class WebSocketClient {
                           configuration: configuration,
                           on: eventLoopGroup
         ) { [weak self] ws in
-            guard let self = self else { return }
             do {
-                if !self.connected {
-                    self.ws = ws
-                    self.connected = true
-                    try await self._onConnectedAsync?(ws)
+                if !(self?.connected ?? true) {
+                    self?.ws = ws
+                    self?.connected = true
+                    try await self?._onConnectedAsync?(ws)
                 }
                 
-                ws.onPing { (ws) in
+                ws.onPing { [weak self] (ws, data) in
+                    guard let self = self else { return }
                     do {
                         try await self._onPingAsync?(ws)
                     } catch {
@@ -95,51 +108,51 @@ final class WebSocketClient {
                     }
                 }
                 
-                ws.onPong { (ws) in
+                ws.onPong { [weak self] (ws, data) in
                     do {
-                        try await self._onPongAsync?(ws)
+                        try await self?._onPongAsync?(ws)
                     } catch {
-                        try? await self._onErrorAsync?(error, ws)
+                        try? await self?._onErrorAsync?(error, ws)
                     }
                 }
                 
-                ws.onClose.whenComplete { (result) in
-                    self.connected = false
-                    Task.detached {
+                ws.onClose.whenComplete { [weak self] (result) in
+                    self?.connected = false
+                    Task.detached { [weak self] in
                         do {
                             switch result {
                             case .success:
-                                try await self._onDisconnectedAsync?(nil)
-                                try await self._onCancelledAsync?()
+                                try await self?._onDisconnectedAsync?(nil)
+                                try await self?._onCancelledAsync?()
                             case let .failure(error):
-                                try await self._onDisconnectedAsync?(error)
-                                try await self._onCancelledAsync?()
+                                try await self?._onDisconnectedAsync?(error)
+                                try await self?._onCancelledAsync?()
                             }
                         } catch {
-                            try? await self._onErrorAsync?(error, self.ws)
+                            try? await self?._onErrorAsync?(error, self?.ws)
                         }
                     }
                 }
                 
-                ws.onText { (ws, text) in
+                ws.onText { [weak self] (ws, text) in
                     do {
-                        try await self._onTextAsync?(text, ws)
+                        try await self?._onTextAsync?(text, ws)
                     } catch {
-                        try? await self._onErrorAsync?(error, ws)
+                        try? await self?._onErrorAsync?(error, ws)
                     }
                 }
                 
-                ws.onBinary { (ws, buffer) in
+                ws.onBinary { [weak self] (ws, buffer) in
                     do {
                         var data: Data = Data()
                         data.append(contentsOf: buffer.readableBytesView)
-                        try await self._onBinaryAsync?(data, ws)
+                        try await self?._onBinaryAsync?(data, ws)
                     } catch {
-                        try? await self._onErrorAsync?(error, ws)
+                        try? await self?._onErrorAsync?(error, ws)
                     }
                 }
             } catch {
-                try? await self._onErrorAsync?(error, self.ws)
+                try? await self?._onErrorAsync?(error, self?.ws)
             }
         }
     }
@@ -155,4 +168,9 @@ final class WebSocketClient {
     func send(text: String) async throws {
         try await ws?.send(text)
     }
+    
+    deinit {
+        pe("\(Self.self) deinit")
+    }
 }
+

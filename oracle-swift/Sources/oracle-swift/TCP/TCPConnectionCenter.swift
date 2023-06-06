@@ -98,7 +98,7 @@ class TCPConnectionCenter {
             defer { lock.unlock() }
             guard let shrd = _shared else {
                 let error: String = "TCPConnectionCenter shared object not initialized"
-                logg(error, .critical)
+                logg(.critical, text: error)
                 fatalError(error)
             }
             return shrd

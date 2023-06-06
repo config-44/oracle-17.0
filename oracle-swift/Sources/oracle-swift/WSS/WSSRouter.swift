@@ -12,14 +12,15 @@ import SwiftExtensionsPack
 class WSSRouter {
     
     static func routing(text: String, _ service: OracleWSSService) async throws {
-        switch text {
-        case #"{"type":"connection_ack"}"#:
-            try await WSSHandler.parseTransactions(service: service)
-        case #"{"type":"ka"}"#:
+        let response: GQLResponse = try service.parseResponse(text: text)
+        switch response.type {
+        case .connection_ack:
+            SynchronizationService.shared.start(service: service)
+        case .ka:
             WSSHandler.pong(service: service)
         default:
 //            logg("default: \(text)")
-            try await WSSHandler.defaultHandler(service: service, text: text)
+            try await WSSHandler.defaultHandler(service: service, response: response)
         }
     }
 }

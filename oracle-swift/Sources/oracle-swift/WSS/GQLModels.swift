@@ -39,9 +39,10 @@ struct GQLRequest: Codable {
     }
 }
 
+/// DATA
 //        {"type":"data","id":"1","payload":{"data":{"transactions":[{"id":"94e1d54fcc430c0e235205ae7a0c220bb7a329e1cf9265408fc815d16787ace2","lt":"11710884000001","prev_trans_lt":"11710879000002"}]}}}
-        
-        
+
+/// ERROR
 //        {
 //            "type":"data",
 //            "id":"1",
@@ -59,10 +60,8 @@ struct GQLRequest: Codable {
 //                ]
 //            }
 //        }
-
-
 struct GQLResponse: Codable {
-    var id: String
+    var id: String?
     var type: GQLResponseType
     var payload: GQLResponsePayload?
     
