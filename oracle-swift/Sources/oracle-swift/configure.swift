@@ -14,7 +14,7 @@ func configure(_ app: Application) async throws {
     let env = try Environment.detect()
     
     /// GET ENV
-    try getAllEnvConstants(app)
+    try await getAllEnvConstants(app)
     
     /// START VAPOR CONFIGURING
     app.http.server.configuration.address = BindAddress.hostname(VAPOR_IP, port: VAPOR_PORT)

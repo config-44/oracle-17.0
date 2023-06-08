@@ -20,7 +20,7 @@ import SwiftExtensionsPack
 //}
 struct GQLRequest: Codable {
     var id: String?
-    var type: GQLRequestType
+    var type: GQLRequestType = .start
     var payload: GQLRequestPayload?
     
     enum GQLRequestType: String, Codable {

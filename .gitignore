@@ -9,3 +9,6 @@ oracle-swift/.swiftpm
 oracle-swift/.netrc
 oracle-swift/.env.*
 oracle-swift/!.env.development
+Test/data/
+Test/master
+Test/.*

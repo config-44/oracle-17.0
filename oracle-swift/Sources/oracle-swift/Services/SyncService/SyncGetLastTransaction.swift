@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Oleh Hudeichuk on 05.06.2023.
 //
@@ -18,12 +18,25 @@ extension SynchronizationService {
             var prev_trans_lt: String
             var lt: String
             var now: UInt
+            var out_messages: [OutMessages]
+            
+            struct OutMessages: Codable {
+                var body: String?
+                var dst: String
+                var msg_type_name: MsgType
+            }
+            
+            enum MsgType: String, Codable {
+                case Internal
+                case ExtIn
+                case ExtOut
+            }
         }
     }
     
-    func getLastTransactions(service: OracleWSSService, fromUnixTime: UInt) async throws -> GetLastTransactionModel {
+    func getLastTransactions(service: OracleWSSService, fromUnixTime: UInt, limit: UInt = 100) async throws -> GetLastTransactionModel {
         let query: String = """
-    query getMissing($address: String!, $now: Float!) {
+    query getMissing($address: String!, $now: Float!, $limit: Int!) {
         transactions(
             filter: {
                 account_addr: {
@@ -33,21 +46,26 @@ extension SynchronizationService {
                     gt: $now
                 }
             },
-            limit: 1,
+            limit: $limit,
             orderBy: { path: "now", direction: DESC }
         ) {
             id
             now
             lt(format: DEC)
             prev_trans_lt(format: DEC)
+            out_messages { body dst msg_type_name }
         }
     }
 """
         
         let request = GQLRequest(id: service.getQueryId(),
-                                 type: .start,
-                                 payload: .init(variables: ["address": EYE_CONTRACT, "now": fromUnixTime].toAnyValue(),
-                                                query: query))
+                                 payload: .init(variables: [
+                                    "address": EYE_CONTRACT,
+                                    "now": fromUnixTime,
+                                    "limit": limit,
+                                 ].toAnyValue(),
+                                query: query))
+        
         let out = try await service.send(id: request.id!, request: request)
         return try out.toJson.toModel(GetLastTransactionModel.self)
     }

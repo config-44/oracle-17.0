@@ -7,7 +7,7 @@
 
 import Foundation
 import Vapor
-import SwiftExtensionsPackLinux
+import SwiftExtensionsPack
 import adnl_swift
 
 struct TCPRemotePeer {

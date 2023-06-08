@@ -71,7 +71,8 @@ extension OracleCtrl {
             let out = try await client.abi.decode_boc(TSDKParamsOfDecodeBoc(params: abiParams,
                                                                             boc: data,
                                                                             allow_partial: true))
-            logger.notice("proposal_list")
+            logger.notice("\("Proposal_list".uppercased())")
+            var consoleInfo: [[String: Any]] = .init()
             for (key, value) in ((out.data.toDictionary()?["_proposal_list"] as? [String: String]) ?? [:]) {
                 let out = try await client.abi.decode_boc(TSDKParamsOfDecodeBoc(params: [.init(name: "prefix", type: "uint8")], boc: value, allow_partial: true))
                 let pfx = UInt8(out.data.toDictionary()?["prefix"] as! String)
@@ -85,19 +86,22 @@ extension OracleCtrl {
                         ],
                         boc: value,
                         allow_partial: true))
-                    
-                    logger.notice("pidx: \(key)")
-                    logger.notice("valid_until: \(UInt64(key)! >> 32) (~\(BigInt(UInt(key)! >> 32) - BigInt(Date().toSeconds())) sec)")
-                    logger.notice("stake: \(BigInt(out.data.toDictionary()?["stake"] as! String)?.nanoCrystalToCrystal ?? "")")
-                    logger.notice("pubKey: \(out.data.toDictionary()?["pubKey"] as! String)")
-                    logger.notice("adnl: \(out.data.toDictionary()?["adnl"] as! String)")
+                
+                    consoleInfo.append([
+                        "pidx": key,
+                        "valid_until": "\(UInt64(key)! >> 32) (~\(BigInt(UInt(key)! >> 32) - BigInt(Date().toSeconds())) sec)",
+                        "stake": BigInt(out.data.toDictionary()?["stake"] as! String)?.nanoCrystalToCrystal ?? "",
+                        "pubKey": out.data.toDictionary()?["pubKey"] as! String,
+                        "adnl": out.data.toDictionary()?["adnl"] as! String,
+                    ])
                 } else if (pfx == 0x02) {
-                    logger.notice("\(key): 0x02...")
+                    consoleInfo.append([key: "0x02..."])
                 }
-                logger.notice("---------------------------------------")
             }
+            logger.notice("\(consoleInfo.toAnyValue().toJSON())")
             
-            logger.notice("Current_list")
+            logger.notice("\("Current_list".uppercased())")
+            consoleInfo = []
             for (key, value) in ((out.data.toDictionary()?["_current_list"] as? [String: String]) ?? [:]) {
                 let out = try await client.abi.decode_boc(TSDKParamsOfDecodeBoc(
                     params: [
@@ -107,13 +111,14 @@ extension OracleCtrl {
                     ],
                     boc: value,
                     allow_partial: true))
-                
-                logger.notice("id: \(key)")
-                logger.notice("stake: \(BigInt(out.data.toDictionary()?["stake"] as! String)?.nanoCrystalToCrystal ?? "")")
-                logger.notice("pubKey: \(out.data.toDictionary()?["pubKey"] as! String)")
-                logger.notice("adnl: \(out.data.toDictionary()?["adnl"] as! String)")
-                logger.notice("---------------------------------------")
+                consoleInfo.append([
+                    "id": key,
+                    "stake": BigInt(out.data.toDictionary()?["stake"] as! String)?.nanoCrystalToCrystal ?? "",
+                    "pubKey": out.data.toDictionary()?["pubKey"] as! String,
+                    "adnl": out.data.toDictionary()?["adnl"] as! String,
+                ])
             }
+            logger.notice("\(consoleInfo.toAnyValue().toJSON())")
         }
     }
 }

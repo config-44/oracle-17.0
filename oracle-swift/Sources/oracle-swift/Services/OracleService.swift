@@ -15,7 +15,6 @@ public final class OracleWSSService {
     @Atomic private var checkPingTimeOut: UInt32 = 5
     var lastPingUnixTime: UInt = Date().toSeconds()
     @Atomic private var queryID: UInt = 0
-    @Atomic private var requestsQueue: DispatchQueue = .init(label: "")
     private let lock: NSLock = .init()
     private var requests: [String: ((GQLResponse) async throws -> Void)] = [:]
     private var requestsContinuation: [String: CheckedContinuation<AnyValue, Error>] = [:]
@@ -38,6 +37,7 @@ public final class OracleWSSService {
         
         wsClient.onConnected { [weak self] ws in
             guard let self = self else { return }
+            self.lastPingUnixTime = Date().toSeconds()
             self.connectWatcherActive = false
             self.pingWatcherActive = true
             logg(text: "WSS Connected")
@@ -53,7 +53,7 @@ public final class OracleWSSService {
         }
         
         wsClient.onDisconnected { error in
-            logg(error ?? makeError(OError("Disconnected withou error")))
+            logg(error ?? makeError(OError("Disconnected without error")))
         }
         
         wsClient.onError { error, ws in
@@ -83,7 +83,6 @@ public final class OracleWSSService {
     }
     
     func parseResponse(text: String) throws -> GQLResponse {
-        pe(text)
         let response: GQLResponse = try text.toModel(GQLResponse.self)
         return response
     }
@@ -143,7 +142,6 @@ public final class OracleWSSService {
                 try await connectWatcher()
             }
             try await wsClient.connect(headers: ["Sec-WebSocket-Protocol": "graphql-ws"])
-            lastPingUnixTime = Date().toSeconds()
         }
     }
     
@@ -166,7 +164,7 @@ public final class OracleWSSService {
                 guard let self = self else { return }
                 sleep(Self.shared.checkPingTimeOut)
                 let diff: UInt = Date().toSeconds() - self.lastPingUnixTime
-                pe(diff, ">", UInt(Self.shared.pingTimeOut))
+//                pe(diff, ">", UInt(Self.shared.pingTimeOut))
                 if (diff > UInt(Self.shared.pingTimeOut)) && self.pingWatcherActive {
                     Task.detached { [weak self] in
                         try await self?.reconnect()
@@ -193,5 +191,8 @@ public final class OracleWSSService {
     
     deinit {
         logg(text: "\(Self.self) deinit")
+        for conn in requestsContinuation.values {
+            conn.resume(throwing: makeError(OError("The class \(Self.self) has been deinitialized")))
+        }
     }
 }

@@ -15,11 +15,11 @@ class WSSRouter {
         let response: GQLResponse = try service.parseResponse(text: text)
         switch response.type {
         case .connection_ack:
-            SynchronizationService.shared.start(service: service)
+            try await SynchronizationService.shared.startWatcher(service: service)
         case .ka:
             WSSHandler.pong(service: service)
         default:
-//            logg("default: \(text)")
+//            logg(text: "default: \(text)")
             try await WSSHandler.defaultHandler(service: service, response: response)
         }
     }
