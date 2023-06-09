@@ -64,7 +64,7 @@ class SynchronizationService {
         #warning("test")
         testCounter += 1
         if Float(Int(testCounter / 10)) == testCounter / 10 {
-            logg(text: "I am okay 😌")
+            logg(text: "\(Date()) I am okay 😌")
         }
         if transactions.count > 0 {
             logg(text: "Wow 😯 I found \(transactions.count) transactions 😋")
