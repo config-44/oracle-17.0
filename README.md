@@ -13,7 +13,7 @@ powered by a network of oracle nodes that validate and verify data.
 
 ### Venom Blockchain devnet Eye address
 ```
-TODO
+0:1a5ddb05c7f7abc492d2733cdd8adedab90ea9e2152243d0516ac5d86d3d1fcb
 ```
 
 ### Example usage
