@@ -6,7 +6,7 @@
 //
 
 import Foundation
-
+import EverscaleClientSwift
 
 extension SynchronizationService {
     //    {"transactions":[{"id":"94e1d54fcc430c0e235205ae7a0c220bb7a329e1cf9265408fc815d16787ace2","prev_trans_lt":"11710879000002","lt":"11710884000001"}]}
@@ -94,10 +94,20 @@ extension SynchronizationService {
     }
 """
         
-        let request = GQLRequest(id: await service.requestsActor.nextQueryID(),
-                                 payload: .init(query: query))
+        let o = try await SDKCLIENT.net.query(TSDKParamsOfQuery(query: query))
+//        pe(o.result)
         
-        let out = try await service.send(id: request.id!, request: request)
-        return try out.toJson.toModel(GetLastTransactionModel.self)
+//        pe(try (o.result.toDictionary()?["data"] as? [String: Any])?.toJSON().toModel(GetLastTransactionModel.self))
+        
+//        let request = GQLRequest(id: await service.requestsActor.nextQueryID(),
+//                                 payload: .init(query: query))
+        
+//        let out = try await service.send(id: request.id!, request: request)
+        guard let tx = try (o.result.toDictionary()?["data"] as? [String: Any])?.toJSON().toModel(GetLastTransactionModel.self)
+        else {
+            logg(text: "BAD TX RESPONSE")
+            throw OError("BAD TX RESPONSE")
+        }
+        return tx
     }
 }
