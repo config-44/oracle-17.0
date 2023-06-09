@@ -6,18 +6,18 @@ require 'time'
 
 
 current_file_path = File.expand_path(File.dirname(__FILE__))
-ITERATIONS = 7
-
-start_seq_no = ARGV[0].strip.to_i
-eye_addr = ARGV[1].strip
-wallet_path = ARGV[2].strip
-gql_url = ARGV[3].strip
-master_file_base = ARGV[4].strip
 
 def execute_command(command)
 	p command
-	`#{command}`
+	system("#{command}")
 end
+
+eye_addr = ARGV[0].strip
+wallet_path = ARGV[1].strip
+gql_url = ARGV[2].strip
+master_file_base = ARGV[3].strip
+start_seq_no = `ruby #{current_file_path}/read_seqno.rb #{wallet_path} #{gql_url}`.strip.to_i
+
 
 info = `oracle-ctrl info #{eye_addr}`
 info[/PROPOSAL_LIST\n.+\[oracle_ctrl\]\s+?(\[.+?\])/]
@@ -40,13 +40,3 @@ json.each_with_index do |proposal, index|
 	sleep 1.5
 end
 
-# p json
-# ITERATIONS.times do |num|
-# 	file_base = FILE_BASE + "#{num}/oracle"
-# 	execute_command("oracle-ctrl init #{file_base}")
-# 	execute_command("oracle-ctrl apply #{file_base} #{stake} #{VOTING_REWARD} #{file_base}.apply")
-# 	execute_command("fift -s pw-req.fif #{wallet_path} #{eye_addr} #{start_seq_no + num} #{stake + VOTING_REWARD + 1} -B #{file_base}.apply.boc #{file_base}.pw")
-# 	execute_command("tonos-cli -u #{gql_url} sendfile #{file_base}.pw.boc")
-# 	p "- 0 - 0 - 0 - 0 - 0 - 0 - 0 -"
-# 	sleep 1.5
-# end

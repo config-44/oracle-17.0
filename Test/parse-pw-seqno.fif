@@ -1,0 +1,4 @@
+
+$1 =: boc-file
+
+boc-file file>B B>boc <s ref@+ swap ref@ <s 256 u@+ 16 u@ .

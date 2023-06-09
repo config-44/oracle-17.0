@@ -12,7 +12,7 @@ import SwiftExtensionsPack
 extension SynchronizationService {
     //    {"transactions":[{"id":"94e1d54fcc430c0e235205ae7a0c220bb7a329e1cf9265408fc815d16787ace2","prev_trans_lt":"11710879000002","lt":"11710884000001"}]}
     struct WaitAccountActiveModel: Codable {
-        var accounts: [Account]
+        var accounts: [Account]?
         
         struct Account: Codable {
             var id: String
@@ -20,7 +20,7 @@ extension SynchronizationService {
         }
     }
     
-    actor WaitAccountActiveActor {
+    actor WaitActiveActor {
         var cancelled: Bool = false
         
         func cancel() {
@@ -47,13 +47,11 @@ extension SynchronizationService {
     }
 """
         
-        let request = GQLRequest(id: service.getQueryId(),
-                                 payload: .init(variables: [
-                                    "address": addr
-                                 ].toAnyValue(),
+        let request = GQLRequest(id: await service.requestsActor.nextQueryID(),
+                                 payload: .init(variables: ["address": addr].toAnyValue(),
                                                 query: query))
         
-        let waitAccountActiveActor: WaitAccountActiveActor = .init()
+        let waitAccountActiveActor: WaitActiveActor = .init()
         return try await withCheckedThrowingContinuation { conn in
             Task.detached {
                 let start: UInt64 = UInt64(Date().toSeconds())
@@ -61,8 +59,9 @@ extension SynchronizationService {
                     do {
                         let out = try await service.send(id: request.id!, request: request)
                         let accounts = try out.toJson.toModel(WaitAccountActiveModel.self) as WaitAccountActiveModel
-                        guard let account = accounts.accounts.first else {
-                            throw makeError(OError("Account not found"))
+                        guard let account = (accounts.accounts ?? []).first else {
+                            throw makeError(OError("Account not found: \(out.toJson)"))
+//                            continue
                         }
                         if account.data != nil {
                             await waitAccountActiveActor.cancel()

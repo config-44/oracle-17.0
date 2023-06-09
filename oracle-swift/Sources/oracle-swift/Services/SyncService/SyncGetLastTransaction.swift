@@ -58,13 +58,13 @@ extension SynchronizationService {
     }
 """
         
-        let request = GQLRequest(id: service.getQueryId(),
+        let request = GQLRequest(id: await service.requestsActor.nextQueryID(),
                                  payload: .init(variables: [
                                     "address": EYE_CONTRACT,
                                     "now": fromUnixTime,
                                     "limit": limit,
                                  ].toAnyValue(),
-                                query: query))
+                                                query: query))
         
         let out = try await service.send(id: request.id!, request: request)
         return try out.toJson.toModel(GetLastTransactionModel.self)

@@ -63,7 +63,8 @@ extension ValidatorToolOptionsPrtcl {
         guard let workChain: Int32 = config?["wc"] as? Int32
         else { fatalError("Bad config json. workChain not found") }
         
-        endpoints = ["https://devnet.evercloud.dev/221d107cd88b4da19c57c2aabf76deb9"]
+//        endpoints = ["https://devnet.evercloud.dev/221d107cd88b4da19c57c2aabf76deb9"]
+        endpoints = ["https://gql-devnet.venom.network/graphql"]
         let networkConfig: TSDKNetworkConfig = .init(server_address: nil,
                                                      endpoints: endpoints,
                                                      max_reconnect_timeout: nil,

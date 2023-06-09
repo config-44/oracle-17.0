@@ -8,16 +8,40 @@
 import Foundation
 import SwiftExtensionsPack
 
+actor RequestsContinuation {
+    var requestsContinuation: [String: CheckedContinuation<AnyValue, Error>] = [:]
+    private var queryID: UInt = 0
+    
+    func nextQueryID() -> String {
+        if queryID == UInt.max {
+            queryID = 0
+        } else {
+            queryID += 1
+        }
+        return String(queryID)
+    }
+    
+    func setRequest(id: String, conn: CheckedContinuation<AnyValue, Error>) {
+        if requestsContinuation[id] != nil { fatalError("\(id) already present") }
+        requestsContinuation[id] = conn
+    }
+    
+    func getRequest(id: String) -> CheckedContinuation<AnyValue, Error>? {
+        requestsContinuation[id]
+    }
+    
+    func deleteRequest(id: String) {
+        requestsContinuation.removeValue(forKey: id)
+    }
+}
+
 public final class OracleWSSService {
     @Atomic static var shared: OracleWSSService = .init()
     private var wsClient: WebSocketClient!
     @Atomic private var pingTimeOut: UInt32 = 20
     @Atomic private var checkPingTimeOut: UInt32 = 5
     var lastPingUnixTime: UInt = Date().toSeconds()
-    @Atomic private var queryID: UInt = 0
-    private let lock: NSLock = .init()
-    private var requests: [String: ((GQLResponse) async throws -> Void)] = [:]
-    private var requestsContinuation: [String: CheckedContinuation<AnyValue, Error>] = [:]
+    let requestsActor: RequestsContinuation = .init()
     
     private var connectWatcherStarted: Bool = false
     private var connectWatcherActive: Bool = true
@@ -27,11 +51,6 @@ public final class OracleWSSService {
     
     private init() {}
     
-    func getQueryId() -> String {
-        queryID += 1
-        return String(queryID)
-    }
-    
     func start() async throws {
         wsClient = .init(stringURL: GQL_WSS_ENDPOINT)
         
@@ -40,8 +59,10 @@ public final class OracleWSSService {
             self.lastPingUnixTime = Date().toSeconds()
             self.connectWatcherActive = false
             self.pingWatcherActive = true
-            logg(text: "WSS Connected")
-            try await ws.send(GQLRequest(type: .connection_init).toJson)
+            let handshakeText: String = GQLRequest(type: .connection_init).toJson
+            logg(text: "WSS Connected send handshake \(handshakeText)")
+            try await ws.send(handshakeText)
+            logg(text: "Handshake has been sent")
             if !pingWatcherStarted {
                 try await self.pingWatcher()
             }
@@ -68,14 +89,17 @@ public final class OracleWSSService {
     }
     
     func send(id: String, request: GQLRequest) async throws -> AnyValue {
-        try await withCheckedThrowingContinuation { conn in
-            setRequest(id: id, conn: conn)
-            Task.detached { [weak self] in
-                guard let self = self else { return }
+        try await withCheckedThrowingContinuation { [id] conn in
+            Task.detached { [id, conn, weak self] in
+                guard let self = self else {
+                    conn.resume(throwing: makeError(OError("Self deinited")))
+                    return
+                }
+                await requestsActor.setRequest(id: id, conn: conn)
                 do {
                     try await self.send(text: request.toJson)
                 } catch {
-                    self.deleteRequest(id: id)
+                    await requestsActor.deleteRequest(id: id)
                     conn.resume(throwing: makeError(OError(String(describing: error))))
                 }
             }
@@ -88,12 +112,17 @@ public final class OracleWSSService {
     }
     
     func handleResponse(response: GQLResponse) async throws {
-        let model: GQLResponse = response
-        guard let id = model.id else { return }
-        let conn: CheckedContinuation<AnyValue, Error> = try getRequest(id: id)
-        if model.type == .data {
-            guard let payload = model.payload else { throw OError("Payload not found") }
-            deleteRequest(id: id)
+        guard let id = response.id else { return }
+        guard let conn: CheckedContinuation<AnyValue, Error> = await requestsActor.getRequest(id: id) else {
+            return
+        }
+        if response.type == .data {
+            guard let payload = response.payload else {
+                await requestsActor.deleteRequest(id: id)
+                conn.resume(throwing: makeError(OError("Payload not found")))
+                return
+            }
+            await requestsActor.deleteRequest(id: id)
             if let data = payload.data {
                 conn.resume(returning: data)
             } else if let errors = payload.errors, errors.count > 0 {
@@ -101,39 +130,10 @@ public final class OracleWSSService {
             } else {
                 conn.resume(throwing: makeError(OError("Unknown response \(payload)")))
             }
-        } else if model.type == .error {
-            deleteRequest(id: id)
-            conn.resume(throwing: makeError(OError("Unknown rules for response type \(model.type.rawValue)")))
+        } else if response.type == .error {
+            await requestsActor.deleteRequest(id: id)
+            conn.resume(throwing: makeError(OError("Unknown rules for response type \(response.type.rawValue)")))
         }
-    }
-    
-//    private func terminate() async throws -> String {
-//        #"{"type":"connection_error"}"#
-//    }
-    
-    private func setRequest(id: String, _ handler: @escaping ((GQLResponse) async throws -> Void)) {
-        lock.lock()
-        defer { lock.unlock() }
-        requests[id] = handler
-    }
-    
-    private func setRequest(id: String, conn: CheckedContinuation<AnyValue, Error>) {
-        lock.lock()
-        defer { lock.unlock() }
-        requestsContinuation[id] = conn
-    }
-    
-    private func getRequest(id: String) throws -> CheckedContinuation<AnyValue, Error> {
-        lock.lock()
-        defer { lock.unlock() }
-        guard let continuation = requestsContinuation[id] else { throw OError("requestsContinuation not found") }
-        return continuation
-    }
-    
-    private func deleteRequest(id: String) {
-        lock.lock()
-        defer { lock.unlock() }
-        requestsContinuation.removeValue(forKey: id)
     }
     
     private func connect() async throws {
@@ -191,8 +191,10 @@ public final class OracleWSSService {
     
     deinit {
         logg(text: "\(Self.self) deinit")
-        for conn in requestsContinuation.values {
-            conn.resume(throwing: makeError(OError("The class \(Self.self) has been deinitialized")))
+        Task.detached {
+            for conn in await self.requestsActor.requestsContinuation.values {
+                conn.resume(throwing: makeError(OError("The class \(Self.self) has been deinitialized")))
+            }
         }
     }
 }

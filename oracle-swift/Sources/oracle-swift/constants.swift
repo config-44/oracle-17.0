@@ -23,14 +23,16 @@ var LAST_TX_FILE_DB_PATH: String!
 var GQL_HTTPS_ENDPOINT: String!
 var SDKCLIENT: TSDKClientModule!
 var NEW_ACCOUNTS_TIMEOUT: UInt64!
+var REQUEST_BUILDER_TIMEOUT: UInt64!
 var FILE_BASE: String!
+var BROADCUST_REPEAT: Int!
 
 func getAllEnvConstants(_ app: Application) async throws {
     let env = try Environment.detect()
     app.logger.warning("\(env.name)")
     
     guard let stringPort = Environment.get("VAPOR_PORT"), let variable_1 = Int(stringPort) else {
-        fatalError("Set VAPOR_PORT to .env.\(env)")
+        fatalError("Set VAPOR_PORT to .env.\(env) in directory \(pathToRootDirectory)")
     }
     VAPOR_PORT = variable_1
     
@@ -88,6 +90,16 @@ func getAllEnvConstants(_ app: Application) async throws {
     let pair = try await SDKCLIENT.crypto.nacl_sign_keypair_from_secret_key(TSDKParamsOfNaclSignKeyPairFromSecret(secret: secreKeyData.toHexadecimal))
     SECRET_KEY = secreKeyData.toHexadecimal
     PUBLIC_KEY = pair.public
+    
+    guard let broadcustPort = Environment.get("BROADCUST_REPEAT"), let variable_13 = Int(broadcustPort) else {
+        fatalError("Set BROADCUST_REPEAT to .env.\(env)")
+    }
+    BROADCUST_REPEAT = variable_13
+    
+    guard let reqBuilderTimeOutString = Environment.get("REQUEST_BUILDER_TIMEOUT"), let variable_14 = UInt64(reqBuilderTimeOutString) else {
+        fatalError("Set REQUEST_BUILDER_TIMEOUT to .env.\(env)")
+    }
+    REQUEST_BUILDER_TIMEOUT = variable_14
 }
 
 
