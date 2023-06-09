@@ -11,8 +11,8 @@ def execute_command(command)
 	`#{command}`
 end
 
-wallet_path = ARGV[0].strip
-gql_url = ARGV[1].strip
+wallet_path = ENV["WL"] || ARGV[0].strip
+gql_url = ENV["GQL"] || ARGV[1].strip
 
 out = `fift -s pw-req.fif #{wallet_path} 0:0000000000000000000000000000000000000000000000000000000000000000 0 0`
 out[/\(from state-init\)[\s\S]+?(0\:\w+?)\s/]
