@@ -13,9 +13,9 @@ def execute_command(command)
 end
 
 eye_addr = ARGV[0].strip
-wallet_path = ARGV[1].strip
-gql_url = ARGV[2].strip
-master_file_base = ARGV[3].strip
+master_file_base = ARGV[1].strip
+wallet_path = ENV["WL"] || ARGV[2].strip
+gql_url = ENV["GQL"] || ARGV[3].strip
 start_seq_no = `ruby #{current_file_path}/read_seqno.rb #{wallet_path} #{gql_url}`.strip.to_i
 
 

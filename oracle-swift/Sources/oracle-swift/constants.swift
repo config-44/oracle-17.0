@@ -47,8 +47,8 @@ func getAllEnvConstants(_ app: Application) async throws {
     }
     SERVER_PORT = variable_6
     
-    guard let variable_7 = Environment.get("GQL_WSS_ENDPOINT") else { fatalError("Set GQL_WSS_ENDPOINT to .env.\(env)") }
-    GQL_WSS_ENDPOINT = variable_7
+    guard let variable_7 = try getEnvironmentVar("GQL") else { fatalError("Set GQL to your bash .profile") }
+    GQL_WSS_ENDPOINT = variable_7.replace(#"https:"#, "wss:")
     
     guard let variable_8 = Environment.get("EYE_CONTRACT") else { fatalError("Set EYE_CONTRACT to .env.\(env)") }
     EYE_CONTRACT = variable_8
@@ -56,8 +56,8 @@ func getAllEnvConstants(_ app: Application) async throws {
     guard let variable_9 = Environment.get("LAST_TX_FILE_DB_PATH") else { fatalError("Set LAST_TX_FILE_DB_PATH to .env.\(env)") }
     LAST_TX_FILE_DB_PATH = variable_9
     
-    guard let variable_10 = Environment.get("GQL_HTTPS_ENDPOINT") else { fatalError("Set GQL_HTTPS_ENDPOINT to .env.\(env)") }
-    GQL_HTTPS_ENDPOINT = variable_10
+    guard let variable_10 = try getEnvironmentVar("GQL") else { fatalError("Set GQL to your bash .profile") }
+    GQL_HTTPS_ENDPOINT = variable_10.replace(#"wss:"#, "https:").replace(#"\/graphql\/*$"#, "")
     
     /// SDK CLIENT
     let networkConfig: TSDKNetworkConfig = .init(server_address: nil,

@@ -10,8 +10,8 @@ end
 
 ITERATIONS = ARGV[0].strip.to_i
 EYE_CONTRACT_ADDR = ARGV[1].strip
-WALLET_PATH = ARGV[2].strip
-GQL_URL = ARGV[3].strip
+WALLET_PATH = ENV["WL"] || ARGV[2].strip
+GQL_URL = ENV["GQL"] || ARGV[3].strip
 START_PORT = 44550
 ENV_FILE_NAME = ".env.development"
 DATA_PATH = "#{current_file_path}/data/oracle_"
@@ -21,8 +21,8 @@ NODE_START_COMMAND = "oracle-swift --env development"
 env_file = {
 	"VAPOR_IP" => "127.0.0.1",
 	"SERVER_IP" => "127.0.0.1",
-	"GQL_WSS_ENDPOINT" => "wss://gql-devnet.venom.network/graphql",
-	"GQL_HTTPS_ENDPOINT" => "https://gql-devnet.venom.network",
+	"GQL_WSS_ENDPOINT" => GQL_URL.sub(/https:\/\//, 'wss://'),
+	"GQL_HTTPS_ENDPOINT" => GQL_URL.sub(/\/graphql/, '').sub(/wss:\/\//, 'https://'),
 	"EYE_CONTRACT" => EYE_CONTRACT_ADDR,
 	"LAST_TX_FILE_DB_PATH" => "last_tx_db.txt",
 	"NEW_ACCOUNTS_TIMEOUT" => 10,
@@ -78,7 +78,7 @@ env_file = {
 
 p 'ACCEPT ALL'
 sleep(6)
-execute_command("ruby accept_all.rb #{EYE_CONTRACT_ADDR} #{WALLET_PATH} #{GQL_URL} #{MASTER_FILE_BASE}")
+execute_command("ruby accept_all.rb #{EYE_CONTRACT_ADDR} #{MASTER_FILE_BASE} #{WALLET_PATH} #{GQL_URL}")
 
 
 

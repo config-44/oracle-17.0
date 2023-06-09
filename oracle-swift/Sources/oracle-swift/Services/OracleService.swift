@@ -53,6 +53,8 @@ public final class OracleWSSService {
     
     func start() async throws {
         wsClient = .init(stringURL: GQL_WSS_ENDPOINT)
+        logg(text: GQL_WSS_ENDPOINT ?? "No WSS GQL endpoint")
+        logg(text: GQL_HTTPS_ENDPOINT ?? "No HTTPs GQL endpoint")
         
         wsClient.onConnected { [weak self] ws in
             guard let self = self else { return }

@@ -3,6 +3,7 @@ import ArgumentParser
 import EverscaleClientSwift
 import FileUtils
 import Logging
+import SwiftExtensionsPack
 
 struct ValidatorToolOptions: ParsableArguments {
 //    @Flag(name: [.long, .customShort("x")], help: "Use hexadecimal notation for the result.")
@@ -48,7 +49,9 @@ extension ValidatorToolOptionsPrtcl {
         let envJson: [String: Any] = try readEnvVariables()
         let config: [String: Any]? = envJson["config"] as? [String: Any]
         if options.endpoints == nil {
-            if let defaultEndpoints: [String] = config?["endpoints"] as? [String] {
+            if let url = try getEnvironmentVar("GQL") {
+                endpoints = [url]
+            } else if let defaultEndpoints: [String] = config?["endpoints"] as? [String] {
                 endpoints = defaultEndpoints
             } else if let url: String = config?["url"] as? String {
                 endpoints = [url]
@@ -63,8 +66,6 @@ extension ValidatorToolOptionsPrtcl {
         guard let workChain: Int32 = config?["wc"] as? Int32
         else { fatalError("Bad config json. workChain not found") }
         
-//        endpoints = ["https://devnet.evercloud.dev/221d107cd88b4da19c57c2aabf76deb9"]
-        endpoints = ["https://gql-devnet.venom.network/graphql"]
         let networkConfig: TSDKNetworkConfig = .init(server_address: nil,
                                                      endpoints: endpoints,
                                                      max_reconnect_timeout: nil,
