@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftExtensionsPack
+import EverscaleClientSwift
 
 
 extension SynchronizationService {
@@ -33,11 +34,11 @@ extension SynchronizationService {
                            timeOut: UInt64 = NEW_ACCOUNTS_TIMEOUT
     ) async throws -> WaitAccountActiveModel.Account? {
         let query: String = """
-    query getAccount($address: String!) {
+    query {
         accounts(
             filter: {
                 id: {
-                    eq: $address
+                    eq: "\(addr)"
                 }
             }
         ) {
@@ -47,23 +48,19 @@ extension SynchronizationService {
     }
 """
         
-        let request = GQLRequest(id: await service.requestsActor.nextQueryID(),
-                                 payload: .init(variables: ["address": addr].toAnyValue(),
-                                                query: query))
-        
         let waitAccountActiveActor: WaitActiveActor = .init()
         return try await withCheckedThrowingContinuation { conn in
             Task.detached {
                 let start: UInt64 = UInt64(Date().toSeconds())
                 while await !waitAccountActiveActor.cancelled {
                     do {
-                        let out = try await service.send(id: request.id!, request: request)
-                        let accounts = try out.toJson.toModel(WaitAccountActiveModel.self) as WaitAccountActiveModel
-                        guard let account = (accounts.accounts ?? []).first else {
-                            throw makeError(OError("Account not found: \(out.toJson)"))
-//                            continue
+                        let out = try await SDKCLIENT.net.query(TSDKParamsOfQuery(query: query))
+                        guard let accounts = try (out.result.toDictionary()?["data"] as? [String: Any])?.toJSON().toModel(WaitAccountActiveModel.self)
+                        else {
+                            logg(text: "BAD ACCOUNT RESPONSE")
+                            continue
                         }
-                        if account.data != nil {
+                        if let account = (accounts.accounts ?? []).first, account.data != nil {
                             await waitAccountActiveActor.cancel()
                             conn.resume(returning: account)
                         } else if UInt64(Date().toSeconds()) - start < timeOut {
