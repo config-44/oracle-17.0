@@ -32,49 +32,49 @@ env_file = {
 
 
 # # CREATE ENV FILES
-# p 'CREATE ENV FILES'
-# start_port = START_PORT
-# ITERATIONS.times do |i|
-# 	env_file["VAPOR_PORT"] = start_port + i
-# 	env_file["SERVER_PORT"] = start_port + 1 + i
-# 	start_port = env_file["SERVER_PORT"]
-# 	env_file["FILE_BASE"] = "#{DATA_PATH}#{i}/oracle"
+p 'CREATE ENV FILES'
+start_port = START_PORT
+ITERATIONS.times do |i|
+	env_file["VAPOR_PORT"] = start_port + i
+	env_file["SERVER_PORT"] = start_port + 1 + i
+	start_port = env_file["SERVER_PORT"]
+	env_file["FILE_BASE"] = "#{DATA_PATH}#{i}/oracle"
 
-# 	File.delete("#{DATA_PATH}#{i}/#{ENV_FILE_NAME}") if File.exist?("#{DATA_PATH}#{i}/#{ENV_FILE_NAME}")
-# 	`mkdir -p #{DATA_PATH}#{i}`
-# 	env_file.each do |key, value|
-# 		File.write("#{DATA_PATH}#{i}/#{ENV_FILE_NAME}", "#{key}=#{value}\n", mode: 'a+')
-# 	end
-# end
+	File.delete("#{DATA_PATH}#{i}/#{ENV_FILE_NAME}") if File.exist?("#{DATA_PATH}#{i}/#{ENV_FILE_NAME}")
+	`mkdir -p #{DATA_PATH}#{i}`
+	env_file.each do |key, value|
+		File.write("#{DATA_PATH}#{i}/#{ENV_FILE_NAME}", "#{key}=#{value}\n", mode: 'a+')
+	end
+end
 
 # # MAKE SEED FILES
-# p 'MAKE SEED FILES'
-# execute_command("ruby initial_apply.rb #{EYE_CONTRACT_ADDR} #{WALLET_PATH} #{GQL_URL} #{ITERATIONS} #{DATA_PATH}")
+p 'MAKE SEED FILES'
+execute_command("ruby initial_apply.rb #{EYE_CONTRACT_ADDR} #{WALLET_PATH} #{GQL_URL} #{ITERATIONS} #{DATA_PATH}")
 
-# # START NODES 
-# p 'START NODES'
-# if `uname -s`.strip == 'Darwin'
-# 	system("pkill SCREEN")
-# 	system("screen -wipe")
-# 	system("pkill -9 -f oracle")
-# else
-# 	system("pkill screen")
-# end
-# screen_names = {}
-# ITERATIONS.times do |i|
-# 	screen_name = "#{i}_oracle_node"
-# 	system("screen -Sdm #{screen_name}")
-# 	list = `screen -list`
-# 	list[/(\d+\.#{screen_name})/]
-# 	new_name = $1
-# 	screen_names[i] = new_name
-# end
+# START NODES 
+p 'START NODES'
+if `uname -s`.strip == 'Darwin'
+	system("pkill SCREEN || true && screen -wipe || true && pkill -9 -f oracle-swift")
+else
+	system("pkill screen || true && screen -wipe || true && pkill -9 -f oracle-swift")
+end
+screen_names = {}
+ITERATIONS.times do |i|
+	screen_name = "#{i}_oracle_node"
+	system("screen -Sdm #{screen_name}")
+	list = `screen -list`
+	list[/(\d+\.#{screen_name})/]
+	new_name = $1
+	screen_names[i] = new_name
+end
 
-# screen_names.sort.to_h.each do |key, value|
-# 	system("screen -S #{value} -p 0 -X exec bash -lc 'cd #{DATA_PATH}#{key}; cd #{DATA_PATH}#{key} && #{NODE_START_COMMAND}'")
-# 	sleep 0.3
-# 	`osascript -e 'tell application "Terminal" to activate' -e 'tell application "System Events" to tell process "Terminal" to keystroke "t" using command down' -e 'tell application "Terminal" to do script "screen -r #{value}" in selected tab of the front window'`
-# end
+screen_names.sort.to_h.each do |key, value|
+	system("screen -S #{value} -p 0 -X exec bash -lc 'cd #{DATA_PATH}#{key}; cd #{DATA_PATH}#{key} && #{NODE_START_COMMAND}'")
+	sleep 0.3
+	if `uname -s`.strip == 'Darwin'
+		`osascript -e 'tell application "Terminal" to activate' -e 'tell application "System Events" to tell process "Terminal" to keystroke "t" using command down' -e 'tell application "Terminal" to do script "screen -r #{value}" in selected tab of the front window'`
+	end
+end
 
 p 'ACCEPT ALL'
 sleep(6)
