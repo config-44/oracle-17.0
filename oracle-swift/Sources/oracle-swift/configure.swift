@@ -19,7 +19,7 @@ func configure(_ app: Application) async throws {
     /// START VAPOR CONFIGURING
     app.http.server.configuration.address = BindAddress.hostname(VAPOR_IP, port: VAPOR_PORT)
     #if os(Linux)
-    app.logger.logLevel = .warning
+    app.logger.logLevel = .debug
     #else
     app.logger.logLevel = .debug
     #endif
