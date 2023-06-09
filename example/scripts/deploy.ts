@@ -75,7 +75,7 @@ async function main () {
     console.log(`Address saved to:\t'${ADDRFILE}'`)
 
     console.log(`Example.sol address:\t${address.toString('raw')}`)
-    console.log('\nsend ~5 tokens to this address (awaiting ...)')
+    console.log('\nplease send ~5 tokens to this address (awaiting ...)')
 
     while (true) {
         try {

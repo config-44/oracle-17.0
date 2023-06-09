@@ -38,5 +38,5 @@ yarn request https://mainnet-v4.tonhubapi.com/block/30081623
 
 6. read the result by calling the `get_last_result` method
 ```bash
-print "\n$(npx everdev c l -n devnet -a $(cat build/Example.addr.txt) build/Example.abi.json get_last_result | awk -v RS='' -F 'Execution has finished with result:\n' '{print $2}' | jq -r .output.value0)"
+printf "\n$(npx everdev c l -n devnet -a $(cat build/Example.addr.txt) build/Example.abi.json get_last_result | awk -v RS='' -F 'Execution has finished with result:\n' '{print $2}' | jq -r .output.value0)"
 ```
