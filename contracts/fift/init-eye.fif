@@ -1,0 +1,69 @@
+#!fift
+"Asm.fif" include
+"utils.fif" include
+"ExtLib.fif" include
+"TonUtil.fif" include
+
+0 =: workchain-id
+"./build/eye" =: save-file
+"./build/eye.tvc" file>B B>boc <s ref@ =: eye-code
+"./build/req.tvc" file>B B>boc <s ref@ =: req-code
+
+$1 =: file-base
+file-base +".pk" load-generate-keypair cr
+256 B>u@ =: priv-key
+256 B>u@ =: pub-key
+
+<{
+    SETCP0 ACCEPT eye-code
+    PUSHREF SETCODE now PUSHINT
+}>c =: code
+
+req-code   // _req_code
+null       // _current_list
+null       // _active_proposers
+null       // _proposal_list
+0          // _proposals_count
+0          // _total_rewards
+"1"  $>GR  // _min_voting_reward
+"90" $>GR  // _max_stake
+"10" $>GR  // _min_stake
+0          // _total_stake
+60 60 *    // _proposal_timeout
+pub-key    // _master_key
+<{
+    NEWC
+    256 STU
+    32 STU
+    SWAP STVARUINT16
+    SWAP STVARUINT16
+    SWAP STVARUINT16
+    7 ROLLREV
+    NEWC
+    SWAP STVARUINT16
+    SWAP STVARUINT16
+    8 STU
+    STDICT
+    STDICT
+    STDICT
+    STREF
+    STBREFR
+    ENDC
+}>s 0 runvmx abort"non zero exit code" =: data
+
+<b 0 32 u, "deploy" $, b> =: msg-body
+
+code data null >state-init =: state-init
+
+."------------------------------------------------------------------" cr
+state-init hashu workchain-id swap 2=: smc-addr
+smc-addr .addr cr cr
+
+smc-addr smca>raw$ $>B save-file +".addr.txt" tuck B>file
+."contract addr saved to: '" type ."' file" cr
+
+state-init 2 boc+>B save-file +".init.boc" tuck B>file
+."contract init saved to: '" type ."' file" cr
+msg-body 2 boc+>B save-file +".body.boc" tuck B>file
+."contract body saved to: '" type ."' file" cr
+."------------------------------------------------------------------" cr

@@ -1,4 +1,12 @@
+# common
+*.log
+*.boc
 .DS_Store
+.history/
+.AppleDouble
+.LSOverride
+
+# oracle-swift/
 oracle-swift/.DS_Store
 oracle-swift/.build
 oracle-swift/Packages
@@ -9,6 +17,24 @@ oracle-swift/.swiftpm
 oracle-swift/.netrc
 oracle-swift/.env.*
 oracle-swift/!.env.development
+
+# Test
 Test/data/
 Test/master
 Test/.*
+
+# contracts/
+contracts/build
+contracts/tests
+contracts/oracle-ctrl
+
+# example
+example/build/*
+example/dist
+example/node_modules
+example/logs
+!example/info/req-code-info.boc
+!example/build/Example.boc
+!example/build/Example.code
+!example/build/Example.abi.json
+!example/build/req-code-info.boc

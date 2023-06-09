@@ -1,0 +1,445 @@
+.version sol 0.69.0
+
+.macro constructor
+DROP
+GETGLOB 2
+ISNULL
+IFREF {
+	CALL $c4_to_c7_with_init_storage$
+}
+GETGLOB 6
+THROWIF 51
+ENDS
+ACCEPT
+CALLREF {
+	CALL $c7_to_c4$
+}
+THROW 0
+
+.macro send_request
+DROP
+GETGLOB 6
+THROWIFNOT 76
+GETGLOB 2
+ISNULL
+IFREF {
+	CALL $c4_to_c7$
+}
+.loc Example.sol, 26
+LDU 16
+LDU 64
+LDREF
+ENDS
+.loc Example.sol, 0
+CALLREF {
+	CALL $send_request_3ffd653b_internal_macro$
+}
+CALLREF {
+	CALL $c7_to_c4$
+}
+THROW 0
+
+.macro send_request_3ffd653b_internal_macro
+.loc Example.sol, 26
+DEPTH
+ADDCONST -5
+PICK
+EQINT -1
+THROWIFNOT 71
+.loc Example.sol, 30
+GETGLOB 5
+DUP
+ISNULL
+PUSHCONT {
+	DROP
+	PUSHINT 0
+}
+IF
+GETGLOB 2
+EQUAL
+THROWIFNOT 100
+.loc Example.sol, 31
+SWAP
+NOW
+GEQ
+THROWIFNOT 101
+.loc Example.sol, 32
+SWAP
+GETGLOB 11
+EQUAL
+THROWIFNOT 102
+.loc Example.sol, 34
+ACCEPT
+.loc Example.sol, 37
+NEWC
+STSLICECONST x00000001
+.loc Example.sol, 38
+LTIME
+STUR 64
+.loc Example.sol, 39
+STREF
+.loc Example.sol, 41
+GETGLOB 10
+NEWC
+STSLICECONST x62_
+STSLICE
+PUSHINT 3112111703474754619475120804657301188247553
+STUR 143
+STBREF
+ENDC
+PUSHINT 3
+SENDRAWMSG
+.loc Example.sol, 43
+GETGLOB 11
+INC
+PUSHPOW2DEC 16
+MOD
+SETGLOB 11
+.loc Example.sol, 0
+
+.globl	state_init_hash_with_zero_data_depth_5a8f0baf_internal
+.type	state_init_hash_with_zero_data_depth_5a8f0baf_internal, @function
+CALL $state_init_hash_with_zero_data_depth_5a8f0baf_internal_macro$
+
+.macro state_init_hash_with_zero_data_depth_5a8f0baf_internal_macro
+.loc Example.sol, 53
+NEWC
+STSLICECONST x020134
+.loc Example.sol, 54
+STU 16
+.loc Example.sol, 55
+STSLICECONST x0000
+.loc Example.sol, 56
+STU 256
+.loc Example.sol, 57
+STU 256
+.loc Example.sol, 59
+ENDC
+CTOS
+SHA256U
+.loc Example.sol, 0
+
+.macro process_result
+DROP
+GETGLOB 6
+THROWIFNOT 76
+GETGLOB 2
+ISNULL
+IFREF {
+	CALL $c4_to_c7$
+}
+.loc Example.sol, 64
+LDU 256
+LDU 4
+LDU 64
+LDREF
+ENDS
+.loc Example.sol, 0
+CALLREF {
+	CALL $process_result_e503785a_internal_macro$
+}
+CALLREF {
+	CALL $c7_to_c4$
+}
+THROW 0
+
+.macro process_result_e503785a_internal_macro
+.loc Example.sol, 64
+DEPTH
+ADDCONST -5
+PICK
+THROWIF 72
+.loc Example.sol, 72
+PUSHINT 0
+NEWC
+STI 1
+.loc Example.sol, 73
+GETGLOB 10
+STSLICER
+.loc Example.sol, 74
+MYADDR
+STSLICER
+.loc Example.sol, 75
+ROLL 4
+STUR 256
+.loc Example.sol, 76
+STSLICECONST x00002_
+.loc Example.sol, 77
+ROLL 3
+STUR 7
+.loc Example.sol, 78
+ROT
+STUR 64
+.loc Example.sol, 80
+ENDC
+HASHCU
+GETGLOB 13
+GETGLOB 14
+CALLREF {
+	CALL $state_init_hash_with_zero_data_depth_5a8f0baf_internal_macro$
+}
+.loc Example.sol, 86
+PUSHINT 0
+NEWC
+STSLICECONST x9_
+STI 8
+STU 256
+ENDC
+CTOS
+.loc Example.sol, 87
+GETGLOB 9
+SDEQ
+THROWIFNOT 401
+.loc Example.sol, 89
+SETGLOB 12
+.loc Example.sol, 0
+
+.macro get_last_result
+DROP
+GETGLOB 6
+THROWIFNOT 76
+GETGLOB 2
+ISNULL
+IFREF {
+	CALL $c4_to_c7$
+}
+.loc Example.sol, 94
+ENDS
+.loc Example.sol, 0
+CALLREF {
+	CALL $get_last_result_f6f9eeac_internal_macro$
+}
+OVER
+PUSHCONT {
+	PUSH S3
+	CTOS
+	LDU 2
+	LDMSGADDR
+	DROP
+	NIP
+	NEWC
+	STSLICECONST xc
+	STSLICE
+	PUSHINT 2205395409
+	STUR 130
+	STREF
+	ENDC
+	PUSHINT 0
+	SENDRAWMSG
+}
+PUSHCONT {
+	DROP
+}
+IFELSE
+IFREF {
+	CALL $c7_to_c4$
+}
+THROW 0
+
+.macro get_last_result_f6f9eeac_internal_macro
+.loc Example.sol, 94
+DEPTH
+ADDCONST -5
+PICK
+EQINT -1
+THROWIFNOT 71
+.loc Example.sol, 95
+GETGLOB 12
+.loc Example.sol, 0
+
+.macro c4_to_c7
+PUSHROOT
+CTOS
+LDU 256 ; pubkey c4
+LDU 1 ; ctor flag
+NIP
+LDMSGADDR
+LDU 16
+LDREF
+LDREF
+ENDS
+CTOS
+LDU 256
+LDU 16
+ENDS
+SETGLOB 14
+SETGLOB 13
+SETGLOB 12
+SETGLOB 11
+SETGLOB 10
+SETGLOB 2
+
+.macro c4_to_c7_with_init_storage
+PUSHROOT
+CTOS
+SBITS
+GTINT 1
+PUSHCONT {
+	PUSHINT 0
+	PUSHROOT
+	CTOS
+	PLDDICT ; D
+	PUSHREFSLICE {
+		.blob x8000000000000000000000000000000000000000000000000000000000000000001_
+	}
+	PUSHINT 0
+	PUSHREF {
+	}
+	PUSHINT 0
+	DUP
+	SETGLOB 14
+	SETGLOB 13
+	SETGLOB 12
+	SETGLOB 11
+	SETGLOB 10
+	PUSHINT 64
+	DICTUGET
+	THROWIFNOT 61
+	PLDU 256
+	SETGLOB 2
+	PUSHINT 0 ; timestamp
+	SETGLOB 3
+}
+IFREFELSE {
+	CALL $c4_to_c7$
+}
+
+.macro c7_to_c4
+GETGLOB 14
+GETGLOB 13
+GETGLOB 12
+GETGLOB 11
+GETGLOB 10
+GETGLOB 2
+NEWC
+STU 256
+STONE
+STSLICE
+STU 16
+STREF
+ROTREV
+NEWC
+STU 256
+STU 16
+STBREFR
+ENDC
+POPROOT
+
+.macro upd_only_time_in_c4
+PUSHROOT
+CTOS
+LDU 256
+LDU 64
+NIP
+GETGLOB 3
+ROT
+NEWC
+STU 256
+STU 64
+STSLICE
+ENDC
+POPROOT
+
+.internal-alias :main_internal, 0
+.internal :main_internal
+PUSHROOT
+CTOS
+SBITS
+NEQINT 1
+SETGLOB 6
+PUSH S2
+CTOS
+LDU 4 ; bounced tail
+LDMSGADDR ; bounced src tail
+DROP
+SETGLOB 9
+MODPOW2 1
+IFRET
+OVER
+SEMPTY ; isEmpty
+IFJMPREF {
+	GETGLOB 6
+	THROWIFNOT 76
+}
+OVER
+LDUQ 32  ; [funcId] body' ok
+THROWIFNOT 60
+OVER
+IFNOTJMPREF {
+	GETGLOB 6
+	THROWIFNOT 76
+}
+SWAP
+CALLREF {
+	CALL $public_function_selector$
+}
+THROW 60
+
+.internal-alias :main_external, -1
+.internal :main_external
+PUSHROOT
+CTOS
+SBITS
+NEQINT 1
+SETGLOB 6
+PUSHREFSLICE {
+	.blob x8000000000000000000000000000000000000000000000000000000000000000001_
+}
+SETGLOB 9
+OVER
+CALLREF {
+	CALL $c4_to_c7_with_init_storage$
+}
+LDU 1 ; haveSign msgSlice
+SWAP
+PUSHCONT {
+	PUSHPOW2 9
+	LDSLICEX
+	DUP
+	MYADDR
+	NEWC
+	STSLICE
+	STSLICE
+	ENDC
+	HASHCU
+	ROT
+	GETGLOB 2
+	DUP
+	SETGLOB 5
+	CHKSIGNU
+	THROWIFNOT 40
+}
+IF
+LDU 32 ; funcId body
+SWAP
+CALLREF {
+	CALL $public_function_selector$
+}
+THROW 60
+
+.macro public_function_selector
+DUP
+PUSHINT 57911761
+EQUAL
+IFJMPREF {
+	CALL $get_last_result$
+}
+DUP
+PUSHINT 1614189761
+EQUAL
+IFJMPREF {
+	CALL $send_request$
+}
+DUP
+PUSHINT 1756716863
+EQUAL
+IFJMPREF {
+	CALL $constructor$
+}
+DUP
+PUSHINT 4245888021
+EQUAL
+IFJMPREF {
+	CALL $process_result$
+}
+
