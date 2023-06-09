@@ -64,7 +64,7 @@ class SynchronizationService {
         #warning("test")
         testCounter += 1
         if Float(Int(testCounter / 10)) == testCounter / 10 {
-            logg(text: "I am okay 😌")
+            logg(text: "\(Date()) I am okay 😌")
         }
         if transactions.count > 0 {
             logg(text: "Wow 😯 I found \(transactions.count) transactions 😋")
@@ -117,7 +117,7 @@ class SynchronizationService {
     
     private func getDataFromRequestAddr(service: OracleWSSService, reqAddr: String) async throws -> [String: Any?]? {
         let account = try await waitAccountActive(service: service, addr: reqAddr)
-        guard let data = account?.data else {
+        guard let data = account?.info?.data else {
             logg(.warning, text: "Contract Data not found. Addr: \(reqAddr)")
             return nil
         }

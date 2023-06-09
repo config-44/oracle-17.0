@@ -34,42 +34,6 @@ extension SynchronizationService {
         }
     }
     
-    //    func getLastTransactions(service: OracleWSSService, fromUnixTime: UInt, limit: UInt = 100) async throws -> GetLastTransactionModel {
-    //        let query: String = """
-    //    query getMissing($address: String!, $now: Float!, $limit: Int!) {
-    //        transactions(
-    //            filter: {
-    //                account_addr: {
-    //                    eq: $address
-    //                },
-    //                now: {
-    //                    gt: $now
-    //                }
-    //            },
-    //            limit: $limit,
-    //            orderBy: { path: "now", direction: DESC }
-    //        ) {
-    //            id
-    //            now
-    //            lt(format: DEC)
-    //            prev_trans_lt(format: DEC)
-    //            out_messages { body dst msg_type_name }
-    //        }
-    //    }
-    //"""
-    //        
-    //        let request = GQLRequest(id: await service.requestsActor.nextQueryID(),
-    //                                 payload: .init(variables: [
-    //                                    "address": EYE_CONTRACT,
-    //                                    "now": fromUnixTime,
-    //                                    "limit": limit,
-    //                                 ].toAnyValue(),
-    //                                                query: query))
-    //        
-    //        let out = try await service.send(id: request.id!, request: request)
-    //        return try out.toJson.toModel(GetLastTransactionModel.self)
-    //    }
-    
     func getLastTransactions(service: OracleWSSService, fromUnixTime: UInt, limit: UInt = 100) async throws -> GetLastTransactionModel {
         let query: String = """
     query {
@@ -95,14 +59,6 @@ extension SynchronizationService {
 """
         
         let o = try await SDKCLIENT.net.query(TSDKParamsOfQuery(query: query))
-//        pe(o.result)
-        
-//        pe(try (o.result.toDictionary()?["data"] as? [String: Any])?.toJSON().toModel(GetLastTransactionModel.self))
-        
-//        let request = GQLRequest(id: await service.requestsActor.nextQueryID(),
-//                                 payload: .init(query: query))
-        
-//        let out = try await service.send(id: request.id!, request: request)
         guard let tx = try (o.result.toDictionary()?["data"] as? [String: Any])?.toJSON().toModel(GetLastTransactionModel.self)
         else {
             logg(text: "BAD TX RESPONSE")
