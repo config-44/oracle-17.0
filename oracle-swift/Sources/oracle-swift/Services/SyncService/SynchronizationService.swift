@@ -117,7 +117,7 @@ class SynchronizationService {
     
     private func getDataFromRequestAddr(service: OracleWSSService, reqAddr: String) async throws -> [String: Any?]? {
         let account = try await waitAccountActive(service: service, addr: reqAddr)
-        guard let data = account?.data else {
+        guard let data = account?.info?.data else {
             logg(.warning, text: "Contract Data not found. Addr: \(reqAddr)")
             return nil
         }

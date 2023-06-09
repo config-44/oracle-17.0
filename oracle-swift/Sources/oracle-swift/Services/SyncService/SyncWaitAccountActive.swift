@@ -12,14 +12,31 @@ import EverscaleClientSwift
 
 extension SynchronizationService {
     //    {"transactions":[{"id":"94e1d54fcc430c0e235205ae7a0c220bb7a329e1cf9265408fc815d16787ace2","prev_trans_lt":"11710879000002","lt":"11710884000001"}]}
+//    struct WaitAccountActiveModel: Codable {
+//        var accounts: [Account]?
+//        
+//        struct Account: Codable {
+//            var id: String
+//            var data: String?
+//        }
+//    }
     struct WaitAccountActiveModel: Codable {
-        var accounts: [Account]?
+        var blockchain: Blockchain
         
-        struct Account: Codable {
-            var id: String
-            var data: String?
+        struct Blockchain: Codable {
+            var account: Account
+            
+            struct Account: Codable {
+                var info: Info?
+                
+                struct Info: Codable {
+                    var data: String?
+                }
+            }
         }
+        
     }
+    
     
     actor WaitActiveActor {
         var cancelled: Bool = false
@@ -32,19 +49,16 @@ extension SynchronizationService {
     func waitAccountActive(service: OracleWSSService,
                            addr: String,
                            timeOut: UInt64 = NEW_ACCOUNTS_TIMEOUT
-    ) async throws -> WaitAccountActiveModel.Account? {
+    ) async throws -> WaitAccountActiveModel.Blockchain.Account? {
         let query: String = """
     query {
-        accounts(
-            filter: {
-                id: {
-                    eq: "\(addr)"
-                }
-            }
-        ) {
-            id
+      blockchain {
+        account(address: "\(addr)") {
+          info {
             data
+          }
         }
+      }
     }
 """
         
@@ -55,14 +69,14 @@ extension SynchronizationService {
                 while await !waitAccountActiveActor.cancelled {
                     do {
                         let out = try await SDKCLIENT.net.query(TSDKParamsOfQuery(query: query))
-                        guard let accounts = try (out.result.toDictionary()?["data"] as? [String: Any])?.toJSON().toModel(WaitAccountActiveModel.self)
+                        guard let account = try (out.result.toDictionary()?["data"] as? [String: Any])?.toJSON().toModel(WaitAccountActiveModel.self)
                         else {
                             logg(text: "BAD ACCOUNT RESPONSE")
                             continue
                         }
-                        if let account = (accounts.accounts ?? []).first, account.data != nil {
+                        if let info = account.blockchain.account.info, info.data != nil {
                             await waitAccountActiveActor.cancel()
-                            conn.resume(returning: account)
+                            conn.resume(returning: account.blockchain.account)
                         } else if UInt64(Date().toSeconds()) - start < timeOut {
                             let checkInterval: Double = 0.6
                             try await Task.sleep(nanoseconds: UInt64(checkInterval * pow(10, 9) as Double))
