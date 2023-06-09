@@ -1,0 +1,10 @@
+"Asm.fif" include
+
+<{ CDEPTH }>s =: cdcc
+{ cdcc 0 runvmx drop } : cdepth
+"./build/req.tvc" file>B B>boc <s ref@ =: req-code
+
+<b req-code hashB B, req-code cdepth 16 u, b> =: info
+
+info 2 boc+>B "../example/build/req-code-info.boc" tuck B>file
+cr ."req code info saved to: '" type ."' file" cr

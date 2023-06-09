@@ -1,0 +1,9 @@
+{
+    "editor.rulers": [79],
+    "files.associations": {
+        "*.code": "fift"
+    },
+    "python.analysis.typeCheckingMode": "strict",
+    "files.trimTrailingWhitespace": true,
+    "errorLens.enabledDiagnosticLevels": ["error"],
+}

@@ -1,0 +1,57 @@
+{
+	"ABI version": 2,
+	"version": "2.3",
+	"header": [],
+	"functions": [
+		{
+			"name": "send_request",
+			"inputs": [
+				{"name":"seqno","type":"uint16"},
+				{"name":"valid_until","type":"uint64"},
+				{"name":"url","type":"string"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "process_result",
+			"id": "0xFD131C15",
+			"inputs": [
+				{"name":"equery_hash","type":"uint256"},
+				{"name":"query_set","type":"uint4"},
+				{"name":"salt","type":"uint64"},
+				{"name":"res","type":"string"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "get_last_result",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"string"}
+			]
+		},
+		{
+			"name": "constructor",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		}
+	],
+	"data": [
+	],
+	"events": [
+	],
+	"fields": [
+		{"name":"_pubkey","type":"uint256"},
+		{"name":"_constructorFlag","type":"bool"},
+		{"name":"_eye_address","type":"address"},
+		{"name":"_seqno","type":"uint16"},
+		{"name":"_last_result","type":"string"},
+		{"name":"_req_code_hash","type":"uint256"},
+		{"name":"_req_code_depth","type":"uint16"}
+	]
+}

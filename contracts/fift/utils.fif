@@ -1,0 +1,18 @@
+library 17util
+
+// s -- $
+{ "" swap dup sbits 8 /
+{ 8 u@+ swap chr rot swap $+ swap }
+swap times drop } : s>$
+
+// code data libs -- c
+{ <b b{00} s, 3 roll dict, rot dict, swap dict, b> } : >state-init
+
+// wc addr -- $
+{ (x.) swap (.) ":" rot $+ $+ } : smca>raw$
+
+// pubk'B -- adnl'B
+{ B{C6B41348} swap B+ BhashB } : pubk>adnlB
+
+// addr'B fname'$ --
+{ dup ."(saving adnl address to file " type .")" cr B>file } : save-adnl-v
