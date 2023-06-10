@@ -2,6 +2,8 @@
 
 ORACLE-17 proof of concept monorepo
 
+Demo video https://www.youtube.com/watch?v=CTe1PpHtHts
+
 ORACLE-17 is a decentralized oracle system based on the Venom Blockchain,
 enabling efficient and secure retrieval of external world data by smart
 contracts. This project is designed to provide a reliable and trustworthy
