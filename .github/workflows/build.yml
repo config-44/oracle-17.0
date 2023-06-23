@@ -1,0 +1,38 @@
+name: build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: toolchain
+        run: |
+          bash script/toolchain.sh -s
+      - name: build
+        run: |
+          cd oracle-swift
+          swift build -c release
+
+      - name: tar
+        run: tar -cvf oracle-linux.tar oracle-swift/.build/release/oracle-swift oracle-swift/.build/release/oracle-ctrl
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: oracle-linux
+          path: oracle-linux.tar
+
+      - uses: softprops/action-gh-release@v1
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        with:
+          draft: true
+          files: oracle-linux.tar
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
